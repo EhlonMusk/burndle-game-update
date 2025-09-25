@@ -315,6 +315,13 @@ class Storage {
     return this.periodDeposits.has(key);
   }
 
+  // ✅ NEW: Check if deposited for previous period (for grace period logic)
+  hasDepositedForPreviousPeriod(walletAddress) {
+    const previousPeriod = this.getPreviousPeriodString();
+    const key = `${walletAddress}-${previousPeriod}`;
+    return this.periodDeposits.has(key);
+  }
+
   markDepositForCurrentPeriod(walletAddress, depositData) {
     const currentPeriod = this.getCurrentPeriodString();
     const key = `${walletAddress}-${currentPeriod}`;
@@ -331,6 +338,42 @@ class Storage {
 
     // Persist to file immediately
     this.saveDepositsToFile();
+  }
+
+  // ✅ NEW: Convert previous period deposit to current period (grace period logic)
+  convertPreviousDepositToCurrent(walletAddress) {
+    const previousPeriod = this.getPreviousPeriodString();
+    const currentPeriod = this.getCurrentPeriodString();
+    const previousKey = `${walletAddress}-${previousPeriod}`;
+    const currentKey = `${walletAddress}-${currentPeriod}`;
+
+    // Get the previous deposit data
+    const previousDeposit = this.periodDeposits.get(previousKey);
+
+    if (previousDeposit) {
+      console.log(`🕒 Converting previous period deposit to current for ${walletAddress.slice(0, 8)}...`);
+
+      // Copy deposit to current period with updated metadata
+      this.periodDeposits.set(currentKey, {
+        ...previousDeposit,
+        period: currentPeriod,
+        originalPeriod: previousPeriod,
+        convertedByGracePeriod: true,
+        conversionTimestamp: new Date(),
+      });
+
+      // Remove from previous period to avoid double-counting
+      this.periodDeposits.delete(previousKey);
+
+      console.log(`✅ Deposit converted from ${previousPeriod} to ${currentPeriod} for ${walletAddress.slice(0, 8)}...`);
+
+      // Persist changes
+      this.saveDepositsToFile();
+      return true;
+    }
+
+    console.log(`⚠️ No previous period deposit found to convert for ${walletAddress.slice(0, 8)}...`);
+    return false;
   }
 
   getDepositForCurrentPeriod(walletAddress) {

@@ -682,6 +682,12 @@ router.post("/record-deposit", (req, res) => {
   }
 
   try {
+    // ✅ NEW: Grace period logic - check if we're within 10 seconds of period start
+    const now = Date.now();
+    const currentPeriodStart = Math.floor(now / 60000) * 60000; // Start of current 1-minute period
+    const timeSinceStart = now - currentPeriodStart;
+    const isGracePeriod = timeSinceStart <= 10000; // 10 seconds grace period
+
     // Check if already deposited for this period
     if (storage.hasDepositedForCurrentPeriod(walletAddress)) {
       return res.status(409).json({
@@ -690,18 +696,41 @@ router.post("/record-deposit", (req, res) => {
       });
     }
 
+    // ✅ NEW: If in grace period, also check previous period to avoid double deposits
+    if (isGracePeriod && storage.hasDepositedForPreviousPeriod(walletAddress)) {
+      console.log(`🕒 Grace period deposit for ${walletAddress.slice(0, 8)}... - converting previous period deposit to current`);
+
+      // Convert the previous period deposit to current period instead of creating new one
+      storage.convertPreviousDepositToCurrent(walletAddress);
+
+      return res.json({
+        success: true,
+        message: "Previous deposit applied to current period (grace period)",
+        gracePeriod: true,
+        timeSinceStart: Math.round(timeSinceStart / 1000),
+      });
+    }
+
     // Record the deposit (no additional signature verification needed - transaction signature is proof enough)
     storage.markDepositForCurrentPeriod(walletAddress, {
       transactionSignature,
       amount: amount || 0.01,
       timestamp: new Date(),
+      gracePeriod: isGracePeriod,
     });
 
-    console.log(`✅ Deposit recorded for ${walletAddress.slice(0, 8)}... with tx: ${transactionSignature.slice(0, 8)}...`);
+    // ✅ NEW: Enhanced logging with grace period info
+    if (isGracePeriod) {
+      console.log(`🕒 Grace period deposit recorded for ${walletAddress.slice(0, 8)}... (${Math.round(timeSinceStart / 1000)}s after period start) with tx: ${transactionSignature.slice(0, 8)}...`);
+    } else {
+      console.log(`✅ Deposit recorded for ${walletAddress.slice(0, 8)}... with tx: ${transactionSignature.slice(0, 8)}...`);
+    }
 
     res.json({
       success: true,
-      message: "Deposit recorded successfully",
+      message: isGracePeriod ? "Deposit recorded successfully (grace period)" : "Deposit recorded successfully",
+      gracePeriod: isGracePeriod,
+      timeSinceStart: Math.round(timeSinceStart / 1000),
       canStartGame: true,
     });
   } catch (error) {
@@ -1016,6 +1045,22 @@ router.post("/handle-incomplete-game", async (req, res) => {
       details: error.message
     });
   }
+});
+
+// ✅ NEW: Test endpoint for grace period timing (admin use)
+router.get("/test-grace-period", (req, res) => {
+  const now = Date.now();
+  const currentPeriodStart = Math.floor(now / 60000) * 60000;
+  const timeSinceStart = now - currentPeriodStart;
+  const isGracePeriod = timeSinceStart <= 10000;
+
+  res.json({
+    currentTime: new Date(now).toISOString(),
+    periodStart: new Date(currentPeriodStart).toISOString(),
+    timeSinceStart: Math.round(timeSinceStart / 1000),
+    isGracePeriod: isGracePeriod,
+    secondsUntilNextPeriod: 60 - Math.round(timeSinceStart / 1000),
+  });
 });
 
 module.exports = router;
