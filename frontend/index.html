@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BURNdle</title>
+
+    <!-- ✅ ADD: Socket.io client library for WebSocket support -->
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+
+    <!-- Load crypto utilities first -->
+    <script src="js/crypto-utils.js"></script>
+    <script src="js/toastsystem.js"></script>
+    <script src="js/difficulty-manager.js"></script>
+    <script src="js/streaks.js"></script>
+    <script src="js/wallet.js"></script>
+    <script src="js/deposit-system.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/countdown-timer.js"></script>
+    <script src="js/playbutton.js"></script>
+    <script src="js/finish-game-modal.js"></script>
+    <script src="js/pause-handler.js"></script>
+    <script src="js/leaderboard.js"></script>
+    <script src="js/burnmodal.js"></script>
+
+    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+    <link rel="stylesheet" href="css/styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    />
+  </head>
+  <body>
+    <!-- Leaderboard Modal -->
+    <div id="leaderboard-modal" class="leaderboard-modal">
+      <div class="leaderboard-content">
+        <div class="leaderboard-header">
+          <button class="leaderboard-close" onclick="closeLeaderboard()">
+            &times;
+          </button>
+          <h2 class="leaderboard-title">🏆 Leaderboard</h2>
+          <p class="leaderboard-subtitle">Top players by current streak</p>
+        </div>
+
+        <div class="leaderboard-search">
+          <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input
+              type="text"
+              id="leaderboard-search-input"
+              class="search-input"
+              placeholder="Search wallet address..."
+              oninput="handleSearchInput()"
+            />
+          </div>
+          <div
+            id="search-results-info"
+            class="search-results-info"
+            style="display: none"
+          ></div>
+        </div>
+
+        <div id="leaderboard-list" class="leaderboard-list">
+          <!-- Leaderboard items will be populated here -->
+        </div>
+
+        <div class="leaderboard-pagination">
+          <button
+            id="prev-btn"
+            class="pagination-btn"
+            onclick="previousPage()"
+            disabled
+          >
+            ← Previous
+          </button>
+          <div id="pagination-info" class="pagination-info">Page 1 of 1</div>
+          <button
+            id="next-btn"
+            class="pagination-btn"
+            onclick="nextPage()"
+            disabled
+          >
+            Next →
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Burn Modal -->
+    <div id="burn-modal" class="burn-modal">
+      <div class="burn-content">
+        <div class="burn-header">
+          <button class="burn-close" onclick="closeBurnModal()">&times;</button>
+          <h2 class="burn-title">🔥 Burn Statistics</h2>
+          <p class="burn-subtitle">Live creator fees and burn percentage</p>
+        </div>
+
+        <div class="burn-body">
+          <!-- Creator Fees Section -->
+          <div class="burn-stats-grid">
+            <div class="stats-section">
+              <div class="section-title">💰 Creator Fees</div>
+              <div class="stats-row">
+                <div class="stat-label">Total Fees (USD)</div>
+                <div class="stat-value large highlight" id="fees-usd">
+                  <span class="loading-spinner" id="fees-usd-loading"></span>
+                  <span id="fees-usd-value" class="loading-text"
+                    >Loading...</span
+                  >
+                </div>
+              </div>
+              <div class="stats-row">
+                <div class="stat-label">Total Fees (SOL)</div>
+                <div class="stat-value" id="fees-sol">
+                  <span class="loading-spinner" id="fees-sol-loading"></span>
+                  <span id="fees-sol-value" class="loading-text"
+                    >Loading...</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Burn Percentage Visualization -->
+          <div class="burn-percentage-viz">
+            <div class="percentage-header">
+              <div class="percentage-title">🔥 Total Burned</div>
+              <div class="percentage-value" id="burn-percentage">
+                <span
+                  class="loading-spinner"
+                  id="burn-percentage-loading"
+                ></span>
+                <span id="burn-percentage-value" class="loading-text"
+                  >Loading...</span
+                >
+              </div>
+            </div>
+
+            <div class="burn-progress">
+              <div
+                class="burn-progress-fill"
+                id="burn-progress-fill"
+                style="width: 0%"
+              ></div>
+            </div>
+
+            <div class="burn-details">
+              <div class="detail-item">
+                <div class="detail-label">Tokens Burned</div>
+                <div class="detail-value" id="tokens-burned">
+                  <span
+                    class="loading-spinner"
+                    id="tokens-burned-loading"
+                  ></span>
+                  <span id="tokens-burned-value" class="loading-text"
+                    >Loading...</span
+                  >
+                </div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Total Supply</div>
+                <div class="detail-value" id="total-supply">
+                  <span
+                    class="loading-spinner"
+                    id="total-supply-loading"
+                  ></span>
+                  <span id="total-supply-value" class="loading-text"
+                    >Loading...</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Refresh Section -->
+          <div class="refresh-section">
+            <button
+              class="refresh-btn"
+              onclick="refreshBurnData()"
+              id="refresh-btn"
+            >
+              🔄 Refresh Data
+            </button>
+            <div class="last-updated" id="last-updated">Never updated</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST -->
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- ✅ ADD: WebSocket connection status indicator -->
+    <div id="websocket-status" class="websocket-status">🔄 Connecting...</div>
+
+    <header>
+      <div class="header-left">
+        <div class="play-button">Play Game</div>
+        <a
+          class="header-left-button header-button-x"
+          href="https://x.com/LouisTherouxDev"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <div class="header-left-icon header-left-x"></div>
+        </a>
+        <a
+          class="header-left-button header-button-pf"
+          href="https://pump.fun/coin/J7R8VjusQsYAN4K72rLxuLxVUJRv8PN7v3Anshk4pump"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <div class="header-left-icon header-left-pf"></div>
+        </a>
+      </div>
+
+      <h1 class="header-title">BURNdle</h1>
+
+      <div class="header-right">
+        <div class="header-right-button header-button-rules">
+          <div class="header-right-icon header-right-rules"></div>
+        </div>
+        <div class="header-right-button header-button-leaderboard">
+          <div class="header-right-icon header-right-leaderboard"></div>
+        </div>
+        <div class="header-right-button header-button-burn">
+          <div class="header-right-icon header-right-burn"></div>
+        </div>
+        <div class="header-right-button daynight-button">
+          <div class="header-right-icon header-right-daynight"></div>
+        </div>
+        <button class="connect-button">Connect</button>
+      </div>
+    </header>
+    <div id="container">
+      <div id="game">
+        <div id="board-container">
+          <div id="board"></div>
+        </div>
+
+        <div id="keyboard-container">
+          <div class="keyboard-row">
+            <button class="key" data-key="q">q</button>
+            <button class="key" data-key="w">w</button>
+            <button class="key" data-key="e">e</button>
+            <button class="key" data-key="r">r</button>
+            <button class="key" data-key="t">t</button>
+            <button class="key" data-key="y">y</button>
+            <button class="key" data-key="u">u</button>
+            <button class="key" data-key="i">i</button>
+            <button class="key" data-key="o">o</button>
+            <button class="key" data-key="p">p</button>
+          </div>
+
+          <div class="keyboard-row">
+            <div class="spacer-half"></div>
+            <button class="key" data-key="a">a</button>
+            <button class="key" data-key="s">s</button>
+            <button class="key" data-key="d">d</button>
+            <button class="key" data-key="f">f</button>
+            <button class="key" data-key="g">g</button>
+            <button class="key" data-key="h">h</button>
+            <button class="key" data-key="j">j</button>
+            <button class="key" data-key="k">k</button>
+            <button class="key" data-key="l">l</button>
+            <div class="spacer-half"></div>
+          </div>
+
+          <div class="keyboard-row">
+            <button class="wide-button" data-key="enter">Enter</button>
+            <button class="key" data-key="z">z</button>
+            <button class="key" data-key="x">x</button>
+            <button class="key" data-key="c">c</button>
+            <button class="key" data-key="v">v</button>
+            <button class="key" data-key="b">b</button>
+            <button class="key" data-key="n">n</button>
+            <button class="key" data-key="m">m</button>
+            <button class="wide-button" data-key="del">Del</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div class="footer-information">
+        <div class="footer-left">
+          <div class="streak-container footer-container">
+            <div class="streak-title">Current Streak</div>
+            <div class="steak-counter">0</div>
+          </div>
+          <div class="prize-container footer-container">
+            <div class="prize--title">Highest Streak</div>
+            <div class="prize-count">0</div>
+          </div>
+        </div>
+        <div class="footer-right">
+          <div class="sol-balance-container footer-container">
+            <div class="sol-balance-title">SOL Balance</div>
+            <div class="sol-balance-counter" id="sol-balance-display">0.00</div>
+          </div>
+          <div class="time-container footer-container">
+            <div class="time-title">Next word</div>
+            <div class="time-countdown">00:00:00</div>
+          </div>
+        </div>
+      </div>
+    </footer>
+    <script src="js/daynighttoggle.js"></script>
+    <script>
+      // Initialize WebSocket status indicator
+      document.addEventListener("DOMContentLoaded", () => {
+        const statusEl = document.getElementById("websocket-status");
+
+        // Hide status indicator after 5 seconds if connection successful
+        setTimeout(() => {
+          if (statusEl && statusEl.classList.contains("connected")) {
+            statusEl.style.transition = "opacity 0.5s ease";
+            statusEl.style.opacity = "0";
+            setTimeout(() => (statusEl.style.display = "none"), 500);
+          }
+        }, 5000);
+      });
+
+      // Update WebSocket status from wallet.js
+      window.updateWebSocketStatus = (status, text) => {
+        const statusEl = document.getElementById("websocket-status");
+        if (statusEl) {
+          statusEl.className = `websocket-status ${status}`;
+          statusEl.textContent = text;
+
+          // Show status indicator when there are connection issues
+          if (status !== "connected") {
+            statusEl.style.display = "block";
+            statusEl.style.opacity = "1";
+          }
+        }
+      };
+    </script>
+  </body>
+</html>
