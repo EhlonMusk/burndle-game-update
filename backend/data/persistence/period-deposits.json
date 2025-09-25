@@ -1,14 +1,62 @@
 {
-  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29313224": {
-    "transactionSignature": "3WVMKnot3zPKvT9sgmUXJTmUcyFVyQffgQbB8Tpv4qNqQ3SbCzTyLJr5YsUCq5gwYt9PV7Eh4KRpFKCN8bwgd4X1",
+  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29313275": {
+    "transactionSignature": "5VKLAr6pJqaVcHHLCpMuYw8yoJqsN4oyLcdPSGwkCm3PhW5GYTzSpwfVW6DBA6mA9uW8crNsetxVJ2hz2CMrA7qU",
     "amount": 0.01,
-    "timestamp": "2025-09-25T09:44:54.719Z",
-    "period": "period-29313224"
+    "timestamp": "2025-09-25T10:35:08.064Z",
+    "period": "period-29313275"
   },
-  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29313225": {
-    "transactionSignature": "3gQyTrDSMnkrLewQui4iNyqT2yiAzPpt7PLfVTfyAzxqKSAydQMhi9qrfSDk5PANydf2VHG72cbL2TXUX3tpH4N6",
+  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29313277": {
+    "transactionSignature": "MEUn5rZuEoHMehmPjzBQhhmgxZdrNvMHxhRQQgmNXZyQaaRWzBoPMudCxrd2FuusWtkoWha56KXHtEABjihmW7S",
     "amount": 0.01,
-    "timestamp": "2025-09-25T09:45:06.574Z",
-    "period": "period-29313225"
+    "timestamp": "2025-09-25T10:37:58.939Z",
+    "period": "period-29313277"
+  },
+  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29313278": {
+    "transactionSignature": "29aWa9V9vdhKL2Xs4aZUiiSsM2jm4Gr7nsHnHXqTB94HKqQ5fVKDMa2EBayK2fKgLhnzmxMwswp3MsCJuiY8tv7m",
+    "amount": 0.01,
+    "timestamp": "2025-09-25T10:38:17.068Z",
+    "period": "period-29313278"
+  },
+  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29313279": {
+    "transactionSignature": "4v3FjQJkv2fjcqVrTb7HTxLBFoR6LUVW3zFm7sUBnxCNGK4Aazz4aDz2CZE1YNv1mjFGkaGKqiBicpzyr51kXHqD",
+    "amount": 0.01,
+    "timestamp": "2025-09-25T10:39:11.998Z",
+    "period": "period-29313279"
+  },
+  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29313280": {
+    "transactionSignature": "4BmhV2MC9kHU6NkUg7Y9F9J3xWiDMXD4tWvenNrwhV15sTaHho4HSCEG2AvvwnqeAbyZ4LamU38YawhJm3oAKsf",
+    "amount": 0.01,
+    "timestamp": "2025-09-25T10:40:08.439Z",
+    "period": "period-29313280"
+  },
+  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29313282": {
+    "transactionSignature": "5i58TRv2rA1BYmyXEmyHTMMLFHPJFWWVSB52iNWtXGmgqCEs78d4UCdrYwYCr1GQ9kM22boFR5vDd8JoT3Rg3QW1",
+    "amount": 0.01,
+    "timestamp": "2025-09-25T10:42:48.758Z",
+    "period": "period-29313282"
+  },
+  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29313283": {
+    "transactionSignature": "3izX34E76VwS32AJYsdr9AnZ7NE3FhPPawUe691PQ5G84R7TCMZCZFQfBWEo8BeBS3x6MqDGmxjSBYh6uhsfLBvC",
+    "amount": 0.01,
+    "timestamp": "2025-09-25T10:43:08.926Z",
+    "period": "period-29313283"
+  },
+  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29313285": {
+    "transactionSignature": "3T4qhBC6wcrtsF5yrzM7KuZ3CRkQzgj9EHR9ZdrnETctJWfNfwrDexZYSZpNGW4GLL3QRrAEJSszVMKqyV87a5es",
+    "amount": 0.01,
+    "timestamp": "2025-09-25T10:45:42.673Z",
+    "period": "period-29313285"
+  },
+  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29313286": {
+    "transactionSignature": "5tERAf9tfXXEGeUEzonRELXf3Zk5KGKWBfNvyKC64DCT2zgZrNpaNoQ9zWLRyvV1sXndtgxD89Ps8163pcor3kxg",
+    "amount": 0.01,
+    "timestamp": "2025-09-25T10:46:08.517Z",
+    "period": "period-29313286"
+  },
+  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29313287": {
+    "transactionSignature": "2CYB49BQDzmPtsSRBgSPWejqJwt3dWPrJPdRwCbpYKR1xMis5KH271B59yU8P1MDJRu3EVVrNumY6n3c6uTbRPZL",
+    "amount": 0.01,
+    "timestamp": "2025-09-25T10:47:11.307Z",
+    "period": "period-29313287"
   }
 }

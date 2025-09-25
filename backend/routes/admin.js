@@ -1119,6 +1119,111 @@ router.get("/player/:walletAddress", authenticateAdmin, async (req, res) => {
   }
 });
 
+// ✅ NEW: Get player's last game grid data
+router.get("/player-game-grid/:walletAddress", authenticateAdmin, async (req, res) => {
+  try {
+    const { walletAddress } = req.params;
+
+    console.log(`📊 Fetching game grid for player: ${walletAddress.slice(0, 8)}...`);
+
+    // Debug: Check what data we have
+    console.log(`🔍 Total active games: ${storage.activeGames.size}`);
+    console.log(`🔍 Total daily games: ${storage.dailyGames.size}`);
+
+    // First check if player has an active game
+    const activeGame = findActiveGameEnhanced(walletAddress);
+
+    if (activeGame && activeGame.guesses && activeGame.guesses.length > 0) {
+      // Player has an active game with guesses
+      console.log(`✅ Found active game for ${walletAddress.slice(0, 8)}... with ${activeGame.guesses.length} guesses`);
+      console.log(`🎯 Active game maxGuesses: ${activeGame.maxGuesses} (difficulty)`);
+
+      const gameData = {
+        answer: activeGame.answer,
+        guesses: activeGame.guesses,
+        isWin: activeGame.isComplete && activeGame.isWin,
+        isComplete: activeGame.isComplete,
+        lastPlayed: new Date(activeGame.startTime).toISOString(),
+        gameId: activeGame.gameId,
+        maxGuesses: activeGame.maxGuesses || 6,
+        availableRows: activeGame.maxGuesses || 6
+      };
+
+      console.log(`📤 Sending game data with maxGuesses: ${gameData.maxGuesses}, availableRows: ${gameData.availableRows}`);
+
+      return res.json({
+        success: true,
+        data: gameData
+      });
+    }
+
+    // No active game or no guesses, check daily games for recent completion
+    const dailyGames = storage.dailyGames;
+    let mostRecentGame = null;
+    let mostRecentDate = 0;
+
+    // Look through daily games to find most recent game for this player
+    for (const [key, gameData] of dailyGames.entries()) {
+      // Key format is "walletAddress-period"
+      if (key.startsWith(walletAddress + '-') && gameData.guesses && gameData.guesses.length > 0) {
+        const gameDate = gameData.completedAt || gameData.timestamp || gameData.startTime || 0;
+        const gameDateMs = typeof gameDate === 'string' ? new Date(gameDate).getTime() : gameDate;
+
+        if (gameDateMs > mostRecentDate) {
+          mostRecentDate = gameDateMs;
+          mostRecentGame = {
+            answer: gameData.answer,
+            guesses: gameData.guesses,
+            isWin: gameData.isWin,
+            isComplete: true,
+            lastPlayed: new Date(gameDateMs).toISOString(),
+            gameId: gameData.gameId || key,
+            maxGuesses: gameData.maxGuesses || 6,
+            availableRows: gameData.maxGuesses || 6
+          };
+        }
+      }
+    }
+
+    if (mostRecentGame) {
+      console.log(`✅ Found recent completed game for ${walletAddress.slice(0, 8)}... with ${mostRecentGame.guesses.length} guesses`);
+      console.log(`🎯 Completed game maxGuesses: ${mostRecentGame.maxGuesses} (difficulty)`);
+      console.log(`📤 Sending completed game data with maxGuesses: ${mostRecentGame.maxGuesses}, availableRows: ${mostRecentGame.availableRows}`);
+
+      return res.json({
+        success: true,
+        data: mostRecentGame
+      });
+    }
+
+    // No game data found
+    console.log(`❌ No game data found for ${walletAddress.slice(0, 8)}...`);
+    console.log(`🔍 Checked ${storage.activeGames.size} active games and ${storage.dailyGames.size} daily games`);
+
+    // List some daily game keys for debugging (first few)
+    const dailyGameKeys = Array.from(storage.dailyGames.keys()).slice(0, 5);
+    console.log(`🔍 Sample daily game keys:`, dailyGameKeys);
+
+    res.json({
+      success: false,
+      message: "No game data found for this player",
+      debug: {
+        totalActiveGames: storage.activeGames.size,
+        totalDailyGames: storage.dailyGames.size,
+        sampleDailyKeys: dailyGameKeys
+      }
+    });
+
+  } catch (error) {
+    console.error("Error getting player game grid:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to get player game grid",
+      message: error.message
+    });
+  }
+});
+
 // ✅ Creator fees and burn tracking endpoints
 const PumpFunScraper = require("../utils/pumpFunScraper");
 const TokenBurnTracker = require("../utils/tokenBurnTracker");

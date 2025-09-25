@@ -601,6 +601,205 @@
         transform: none !important;
       }
 
+      .grid-view-btn {
+        background: rgba(108, 117, 125, 0.1);
+        border: 1px solid rgba(108, 117, 125, 0.2);
+        border-radius: 6px;
+        padding: 6px 8px;
+        color: #6c757d;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+      }
+
+      .grid-view-btn:hover {
+        background: rgba(108, 117, 125, 0.2);
+        color: #495057;
+        transform: scale(1.1);
+      }
+
+      .grid-view-btn svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      /* Player Grid Modal */
+      .grid-modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(2px);
+      }
+
+      .grid-modal-content {
+        background: white;
+        margin: 5% auto;
+        padding: 0;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 267px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        animation: modalSlideIn 0.3s ease;
+      }
+
+      @keyframes modalSlideIn {
+        from {
+          opacity: 0;
+          transform: translateY(-50px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .grid-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.67rem 1rem;
+        border-bottom: 1px solid #e9ecef;
+      }
+
+      .grid-modal-header h3 {
+        margin: 0;
+        color: #333;
+        font-size: 0.8rem;
+      }
+
+      .grid-modal-close {
+        background: none;
+        border: none;
+        font-size: 1rem;
+        cursor: pointer;
+        color: #6c757d;
+        padding: 0;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+      }
+
+      .grid-modal-close:hover {
+        background: #f8f9fa;
+        color: #dc3545;
+      }
+
+      .grid-modal-body {
+        padding: 1rem;
+        text-align: center;
+      }
+
+      /* Player Game Grid */
+      .player-game-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 3px;
+        margin-bottom: 1rem;
+        max-width: 200px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .player-grid-square {
+        width: 33px;
+        height: 33px;
+        border: 1px solid #d3d6da;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        font-size: 0.8rem;
+        color: white;
+        text-transform: uppercase;
+        font-family: 'Arial', sans-serif;
+      }
+
+      /* Grid square results */
+      .player-grid-square.correct {
+        background-color: #6aaa64;
+        border-color: #6aaa64;
+      }
+
+      .player-grid-square.present {
+        background-color: #c9b458;
+        border-color: #c9b458;
+      }
+
+      .player-grid-square.absent {
+        background-color: #787c7e;
+        border-color: #787c7e;
+      }
+
+      .player-grid-square.empty {
+        background-color: white;
+        color: #000;
+      }
+
+      .player-grid-square.disabled {
+        background-color: #f8f9fa;
+        border-color: #e9ecef;
+        opacity: 0.3;
+        position: relative;
+        background-image: linear-gradient(45deg, transparent 40%, #dee2e6 50%, transparent 60%);
+      }
+
+      .player-grid-square.disabled::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 15%;
+        right: 15%;
+        height: 1px;
+        background-color: #ced4da;
+      }
+
+      /* Player Game Answer */
+      .player-game-answer {
+        text-align: center;
+      }
+
+      .player-answer-label {
+        color: #6c757d;
+        font-size: 0.6rem;
+        margin-bottom: 0.33rem;
+        font-weight: 500;
+      }
+
+      .player-answer-tiles {
+        display: flex;
+        justify-content: center;
+        gap: 3px;
+        margin-bottom: 0.67rem;
+      }
+
+      .player-answer-tile {
+        width: 27px;
+        height: 27px;
+        background: white;
+        border: 1px solid #d3d6da;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        font-size: 0.73rem;
+        color: #000;
+        text-transform: uppercase;
+        font-family: 'Arial', sans-serif;
+      }
+
       .pause-status {
         display: flex;
         align-items: center;
@@ -1979,7 +2178,7 @@
                   <th onclick="sortTable('avg_guesses')" style="cursor: pointer;">Avg Guesses/Win ⇅</th>
                   <th onclick="sortTable('total_games_played')" style="cursor: pointer;">Games Played ⇅</th>
                   <th onclick="sortTable('total_games_won')" style="cursor: pointer;">Games Won ⇅</th>
-                  <th onclick="sortTable('win_rate')" style="cursor: pointer;">Win Rate ⇅</th>
+                  <th>Grid</th>
                   <th>Next Word</th>
                   <th>Actions</th>
                 </tr>
@@ -1999,6 +2198,11 @@
       let allPlayersData = [];
       let isGamePaused = false;
       let currentSort = { column: null, direction: 'asc' };
+
+      // Helper function to get admin token
+      function getToken() {
+        return localStorage.getItem("adminToken");
+      }
 
       // Initialize WebSocket connection
       function initializeWebSocket() {
@@ -2569,7 +2773,13 @@
                 <td>${avgGuesses}</td>
                 <td>${player.total_games_played}</td>
                 <td>${player.total_games_won}</td>
-                <td><span class="win-rate">${winRate}</span></td>
+                <td>
+                  <button class="grid-view-btn" onclick="showPlayerGrid('${player.wallet_address}')" title="View last game grid">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z"/>
+                    </svg>
+                  </button>
+                </td>
                 <td>
                   <span class="next-word">${nextWord}</span>
                 </td>
@@ -3853,6 +4063,241 @@
         initializeCollapsibleSections();
       });
 
+      // Player Grid Modal Functions
+      async function showPlayerGrid(walletAddress) {
+        try {
+          console.log(`📊 Fetching grid for player: ${walletAddress.slice(0, 8)}...`);
+
+          // Show modal with loading state
+          const modal = document.getElementById('playerGridModal');
+          const title = document.getElementById('gridModalTitle');
+          const gridContainer = document.getElementById('playerGameGrid');
+          const answerContainer = document.getElementById('playerGameAnswer');
+
+          title.textContent = `${walletAddress.slice(0, 8)}...'s Last Game`;
+          gridContainer.innerHTML = '<div style="color: #6c757d;">Loading...</div>';
+          answerContainer.innerHTML = '';
+          modal.style.display = 'block';
+
+          // Fetch player's last game data
+          const token = getToken();
+          if (!token) {
+            throw new Error('Admin token not found. Please log in again.');
+          }
+
+          console.log(`📡 Calling API: /api/admin/player-game-grid/${walletAddress}`);
+          const response = await fetch(`/api/admin/player-game-grid/${walletAddress}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          console.log(`📡 Response status: ${response.status}`);
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${response.statusText}\n${errorText}`);
+          }
+
+          const data = await response.json();
+
+          if (data.success) {
+            renderPlayerGrid(data.data);
+          } else {
+            gridContainer.innerHTML = '<div style="color: #6c757d; padding: 2rem; text-align: center;"><div style="font-size: 3rem; margin-bottom: 1rem;">🎮</div><div>No game history found</div><div style="font-size: 0.8rem; margin-top: 0.5rem; color: #adb5bd;">Player hasn\'t played any games yet</div></div>';
+            answerContainer.innerHTML = '';
+          }
+
+        } catch (error) {
+          console.error('Error fetching player grid:', error);
+          console.error('Error details:', error.message);
+          const gridContainer = document.getElementById('playerGameGrid');
+          const answerContainer = document.getElementById('playerGameAnswer');
+          gridContainer.innerHTML = `<div style="color: #dc3545;">Error loading game data<br><small>${error.message}</small></div>`;
+          answerContainer.innerHTML = '';
+        }
+      }
+
+      function renderPlayerGrid(gameData) {
+        const gridContainer = document.getElementById('playerGameGrid');
+        const answerContainer = document.getElementById('playerGameAnswer');
+
+        // Clear containers
+        gridContainer.innerHTML = '';
+        answerContainer.innerHTML = '';
+
+        // Debug: Log the received data
+        console.log('🔍 Received game data:', gameData);
+        console.log('🔍 Guesses:', gameData.guesses);
+        console.log('🔍 Answer:', gameData.answer);
+        console.log('🔍 Raw availableRows:', gameData.availableRows);
+        console.log('🔍 Raw maxGuesses:', gameData.maxGuesses);
+        console.log('🔍 Final calculated available rows:', gameData.availableRows || gameData.maxGuesses || 6);
+
+        // Create grid squares (6 rows x 5 columns)
+        const totalSquares = 30;
+        const guesses = gameData.guesses || [];
+        const answer = gameData.answer || '';
+        let availableRows = gameData.availableRows || gameData.maxGuesses || 6;
+        let wasReduced = availableRows < 6;
+        let wasReset = availableRows === 6 && gameData.maxGuesses === 6;
+
+        // Remove test override - use real data
+        // Now using actual maxGuesses data from backend
+
+        console.log(`🔍 Processing ${guesses.length} guesses for answer "${answer}"`);
+        console.log(`🔍 Difficulty Analysis:`);
+        console.log(`   - availableRows: ${availableRows}`);
+        console.log(`   - wasReduced: ${wasReduced}`);
+        console.log(`   - wasReset: ${wasReset}`);
+        console.log(`   - Status: ${wasReduced ? '(REDUCED)' : wasReset ? '(RESET)' : '(NORMAL)'}`);
+
+        // Debug each guess
+        guesses.forEach((guess, index) => {
+          console.log(`🔍 Guess ${index + 1}:`, guess, typeof guess);
+          if (guess && typeof guess === 'object') {
+            console.log(`  - guess.guess: "${guess.guess}"`);
+            console.log(`  - guess.result:`, guess.result);
+          }
+        });
+
+        // Debug row calculations
+        console.log(`🔍 Row Analysis:`);
+        for (let row = 0; row < 6; row++) {
+          const isDisabled = row >= availableRows;
+          console.log(`   - Row ${row + 1}: ${isDisabled ? 'DISABLED' : 'ENABLED'}`);
+        }
+
+        // Create all 30 squares
+        for (let i = 0; i < totalSquares; i++) {
+          const square = document.createElement('div');
+          square.className = 'player-grid-square';
+
+          const rowIndex = Math.floor(i / 5);
+          const colIndex = i % 5;
+
+          // Check if this row was disabled due to difficulty reduction
+          if (rowIndex >= availableRows) {
+            // This row was disabled - show as grayed out
+            square.classList.add('disabled');
+            square.title = `Row ${rowIndex + 1} was disabled due to streak bonus (${6 - availableRows} rows removed)`;
+          } else if (rowIndex < guesses.length && guesses[rowIndex] && guesses[rowIndex].guess) {
+            // Square has a letter - guesses are stored as objects with 'guess' property
+            const guessObj = guesses[rowIndex];
+            const guessWord = guessObj.guess;
+            const guessResult = guessObj.result || [];
+
+            if (colIndex < guessWord.length) {
+              const letter = guessWord[colIndex];
+              square.textContent = letter.toUpperCase();
+
+              // Use the result from the guess object if available
+              if (guessResult[colIndex] === 'correct') {
+                square.classList.add('correct');
+              } else if (guessResult[colIndex] === 'present') {
+                square.classList.add('present');
+              } else if (guessResult[colIndex] === 'absent') {
+                square.classList.add('absent');
+              } else {
+                // Fallback: calculate result manually if not stored
+                if (answer[colIndex] === letter) {
+                  square.classList.add('correct');
+                } else if (answer.includes(letter)) {
+                  square.classList.add('present');
+                } else {
+                  square.classList.add('absent');
+                }
+              }
+            } else {
+              // Empty square within a guess row (shouldn't happen for 5-letter words)
+              square.classList.add('empty');
+            }
+          } else {
+            // Empty square - no guess for this row
+            square.classList.add('empty');
+          }
+
+          gridContainer.appendChild(square);
+        }
+
+        // Create answer display
+        if (answer) {
+          const answerLabel = document.createElement('div');
+          answerLabel.className = 'player-answer-label';
+          answerLabel.textContent = 'Answer:';
+          answerContainer.appendChild(answerLabel);
+
+          const answerTiles = document.createElement('div');
+          answerTiles.className = 'player-answer-tiles';
+
+          for (let i = 0; i < answer.length; i++) {
+            const tile = document.createElement('div');
+            tile.className = 'player-answer-tile';
+            tile.textContent = answer[i].toUpperCase();
+            answerTiles.appendChild(tile);
+          }
+
+          answerContainer.appendChild(answerTiles);
+        }
+
+        // Add game info with difficulty information
+        const gameInfo = document.createElement('div');
+        gameInfo.style.cssText = 'color: #6c757d; font-size: 0.8rem; margin-top: 1rem;';
+
+        // Difficulty indicator
+        let difficultyInfo = '';
+        if (wasReduced) {
+          difficultyInfo = `<br><span style="color: #28a745;">🎯 ${availableRows} rows (${6 - availableRows} removed by streak)</span>`;
+        } else if (availableRows === 6) {
+          difficultyInfo = '<br><span style="color: #6c757d;">📐 6 rows (normal difficulty)</span>';
+        }
+
+        // Add debug info in the modal (optional - can be removed)
+        const debugInfo = `<br><small style="color: #adb5bd; font-size: 0.6rem;">Rows: ${availableRows}/6</small>`;
+
+        gameInfo.innerHTML = `
+          ${guesses.length} guess${guesses.length !== 1 ? 'es' : ''} •
+          ${gameData.isWin ? '✅ Won' : '❌ Lost'}
+          ${difficultyInfo}
+          ${gameData.lastPlayed ? `<br>Played: ${new Date(gameData.lastPlayed).toLocaleDateString()}` : ''}
+          ${debugInfo}
+        `;
+        answerContainer.appendChild(gameInfo);
+      }
+
+      function closePlayerGrid(event) {
+        if (event && event.target !== event.currentTarget) return;
+        const modal = document.getElementById('playerGridModal');
+        modal.style.display = 'none';
+      }
+
+      // Close modal on Escape key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closePlayerGrid();
+        }
+      });
+
     </script>
+
+    <!-- Player Grid Modal -->
+    <div id="playerGridModal" class="grid-modal" onclick="closePlayerGrid(event)">
+      <div class="grid-modal-content" onclick="event.stopPropagation()">
+        <div class="grid-modal-header">
+          <h3 id="gridModalTitle">Player's Last Game</h3>
+          <button class="grid-modal-close" onclick="closePlayerGrid()">&times;</button>
+        </div>
+        <div class="grid-modal-body">
+          <div id="playerGameGrid" class="player-game-grid">
+            <!-- Grid will be populated by JavaScript -->
+          </div>
+          <div id="playerGameAnswer" class="player-game-answer">
+            <!-- Answer will be populated by JavaScript -->
+          </div>
+        </div>
+      </div>
+    </div>
+
   </body>
 </html>
