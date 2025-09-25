@@ -692,6 +692,11 @@ global.handlePeriodTransition = async () => {
     // ✅ STEP 4: Clear old period data
     storage.cleanup();
 
+    // ✅ NEW: Refresh words for all players for new period
+    console.log("🎲 Refreshing words for all players due to period transition...");
+    const wordsRefreshed = storage.refreshAllPlayerWords();
+    console.log(`✅ Refreshed ${wordsRefreshed} player words for new period`);
+
     // ✅ STEP 5: Broadcast period transition to all clients
     if (global.io) {
       console.log("📡 Broadcasting period transition to all clients");
@@ -1012,6 +1017,12 @@ server.listen(PORT, () => {
   setTimeout(() => {
     console.log("🔍 Starting enhanced disconnected player monitoring...");
     enhancedDisconnectedPlayerManager.startPeriodicChecks();
+
+    // ✅ NEW: Initialize random word assignments for new players only
+    setTimeout(() => {
+      console.log("🎲 Initializing random word assignments for new players...");
+      storage.autoAssignRandomWordsToAllPlayers(false); // Don't force - only assign to truly new players
+    }, 2000);
 
     // Run initial cleanup
     setTimeout(() => {

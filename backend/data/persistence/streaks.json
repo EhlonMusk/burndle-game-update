@@ -1,10 +1,32 @@
 {
   "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR": {
-    "currentStreak": 0,
+    "currentStreak": 2,
     "maxStreak": 5,
-    "gamesPlayed": 13,
-    "gamesWon": 12,
-    "lastPlayedDate": "period-29312918",
-    "winRate": 92
+    "gamesPlayed": 15,
+    "gamesWon": 14,
+    "lastPlayedDate": "period-29312965",
+    "winRate": 93
+  },
+  "5M6pX3QczYErjU8MjRKpgWWzXfU69LwvdCmTQpt2Lai5": {
+    "currentStreak": 0,
+    "maxStreak": 4,
+    "gamesPlayed": 11,
+    "gamesWon": 10,
+    "lastPlayedDate": "period-29312964",
+    "winRate": 91
+  },
+  "8k5v74yn1p8oEQwmuiNRwoywu6ygSenCnoWFfA65Zz85": {
+    "currentStreak": 0,
+    "maxStreak": 0,
+    "gamesPlayed": 0,
+    "gamesWon": 0,
+    "lastPlayedDate": null
+  },
+  "CRKMybfYyWjjxXxKw6Wc3J8gd814e6PQnGQLssZKcWJt": {
+    "currentStreak": 0,
+    "maxStreak": 0,
+    "gamesPlayed": 0,
+    "gamesWon": 0,
+    "lastPlayedDate": null
   }
 }

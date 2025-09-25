@@ -395,6 +395,10 @@ router.post("/reset-all-data", authenticateAdmin, (req, res) => {
     storage.dailyGames.clear();
     storage.assignedWords = {};
 
+    // ✅ NEW: Auto-assign random words to all players after reset
+    console.log("🎲 ADMIN RESET - Auto-assigning random words after data reset");
+    storage.autoAssignRandomWordsToAllPlayers(true); // Force assignment after reset
+
     // ✅ CRITICAL: Save the cleared data to persistent files
     storage.saveStreaksToFile();
     storage.saveDailyGamesToFile();
@@ -498,7 +502,11 @@ router.post("/countdown-completion-reset", (req, res) => {
     storage.activeGames.clear();
     storage.walletStreaks.clear();
     storage.dailyGames.clear();
-    storage.assignedWords.length = 0;
+    storage.assignedWords = {}; // ✅ FIXED: Should be object, not array
+
+    // ✅ NEW: Auto-assign random words to all players for new period
+    console.log("🎲 COUNTDOWN RESET - Auto-assigning random words for new period");
+    storage.autoAssignRandomWordsToAllPlayers(true); // Force assignment after countdown reset
 
     // Save the cleared state to files
     storage.saveActivesToFile();
@@ -991,9 +999,33 @@ router.get("/players", authenticateAdmin, async (req, res) => {
       const playerWords = assignedWords[walletAddress] || [];
       const nextWord = playerWords.find((w) => !w.used);
 
-      // ✅ CRITICAL FIX: Use enhanced active game detection
+      // ✅ CRITICAL FIX: Use enhanced active game detection (moved up)
       const activeGame = findActiveGameEnhanced(walletAddress);
       const gameStatus = analyzePlayerGameStatus(walletAddress, activeGame);
+
+      // ✅ NEW: Get actual current/next word (not just assigned word)
+      let displayWord = "Random";
+      if (gameStatus.hasActiveGame && activeGame && activeGame.answer) {
+        // Player has active game - show current word they're solving
+        displayWord = activeGame.answer.toUpperCase();
+      } else if (nextWord) {
+        // Player has assigned word for next game
+        displayWord = nextWord.word.toUpperCase();
+      } else {
+        // ✅ FIXED: Be more conservative about showing random words
+        // Only show a preview word if the player has never had any assigned words
+        const hasNeverHadWords = playerWords.length === 0;
+        if (hasNeverHadWords) {
+          // New player - show what word they would get
+          const nextRandomWord = storage.getNextWordForPlayer ? storage.getNextWordForPlayer(walletAddress) : null;
+          if (nextRandomWord) {
+            displayWord = nextRandomWord.toUpperCase();
+          }
+        } else {
+          // Player has had words before - just show "Pending" until they get a new assignment
+          displayWord = "Pending";
+        }
+      }
 
       // ✅ Enhanced game status display
       let gameStatusText = "💤 Offline";
@@ -1033,7 +1065,7 @@ router.get("/players", authenticateAdmin, async (req, res) => {
                 (player.totalGuesses || player.gamesWon * 4) / player.gamesWon
               ).toFixed(1)
             : "N/A",
-        next_word: nextWord ? nextWord.word.toUpperCase() : "Random",
+        next_word: displayWord,
         last_played_date: player.lastPlayedDate || "Unknown",
         assigned_words_count: playerWords.length,
         unused_words_count: playerWords.filter((w) => !w.used).length,

@@ -432,37 +432,110 @@ class Storage {
   }
 
   getRandomWord() {
-    const fallbackWords = [
-      "apple",
-      "brave",
-      "cloud",
-      "dance",
-      "eagle",
-      "flame",
-      "grace",
-      "happy",
-      "input",
-      "jolly",
-      "karma",
-      "light",
-      "magic",
-      "noble",
-      "ocean",
-      "peace",
-      "quiet",
-      "royal",
-      "smart",
-      "trust",
-      "unity",
-      "voice",
-      "worth",
-      "youth",
-    ];
+    // ✅ NEW: Use proper word list if available
+    if (!this.wordList) {
+      this.loadWordList();
+    }
 
-    const randomWord =
-      fallbackWords[Math.floor(Math.random() * fallbackWords.length)];
+    const words = this.wordList && this.wordList.length > 0 ? this.wordList : this.getFallbackWords();
+    const randomWord = words[Math.floor(Math.random() * words.length)];
     console.log(`🎲 Using random word "${randomWord}"`);
     return randomWord;
+  }
+
+  // ✅ NEW: Load word list from file
+  loadWordList() {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const wordListPath = path.join(__dirname, '../wordlist.json');
+
+      if (fs.existsSync(wordListPath)) {
+        this.wordList = JSON.parse(fs.readFileSync(wordListPath, 'utf8'))
+          .map((w) => w.replace(/[^a-zA-Z]/g, "").toLowerCase())
+          .filter((w) => w.length === 5);
+        console.log(`📚 Loaded ${this.wordList.length} words for random assignment`);
+      } else {
+        console.warn("⚠️ wordlist.json not found, using fallback words");
+        this.wordList = this.getFallbackWords();
+      }
+    } catch (error) {
+      console.error("Error loading word list:", error);
+      this.wordList = this.getFallbackWords();
+    }
+  }
+
+  // ✅ NEW: Get fallback words
+  getFallbackWords() {
+    return [
+      "apple", "brave", "cloud", "dance", "eagle", "flame", "grace", "happy",
+      "input", "jolly", "karma", "light", "magic", "noble", "ocean", "peace",
+      "quiet", "royal", "smart", "trust", "unity", "voice", "worth", "youth",
+    ];
+  }
+
+  // ✅ NEW: Auto-assign random words to all players (conservative mode)
+  autoAssignRandomWordsToAllPlayers(forceAssignment = false) {
+    console.log(`🎲 Auto-assigning random words to all players (force: ${forceAssignment})...`);
+
+    const allStreaks = this.getAllStreaks();
+    let assignedCount = 0;
+
+    for (const player of allStreaks) {
+      const walletAddress = player.fullWallet;
+
+      // Check if player already has an unused assigned word
+      const playerWords = this.assignedWords[walletAddress] || [];
+      const hasUnusedWord = playerWords.find((w) => !w.used);
+
+      // ✅ NEW: Be more conservative - only assign if forced OR player has never had ANY words
+      const hasNeverHadWords = playerWords.length === 0;
+
+      if (!hasUnusedWord && (forceAssignment || hasNeverHadWords)) {
+        // Assign a random word to this player
+        const randomWord = this.getRandomWord();
+
+        if (!this.assignedWords[walletAddress]) {
+          this.assignedWords[walletAddress] = [];
+        }
+
+        this.assignedWords[walletAddress].push({
+          word: randomWord,
+          assignedAt: new Date().toISOString(),
+          used: false,
+          assignedBy: "system_auto_assignment",
+          type: "period_auto_assignment",
+        });
+
+        assignedCount++;
+        console.log(`🎯 Auto-assigned "${randomWord}" to ${walletAddress.slice(0, 8)}... (reason: ${forceAssignment ? 'forced' : 'never had words'})`);
+      } else if (!hasUnusedWord && !forceAssignment) {
+        console.log(`⏭️  Skipping ${walletAddress.slice(0, 8)}... - has previous words but no unused (not forced)`);
+      }
+    }
+
+    console.log(`✅ Auto-assigned ${assignedCount} random words to players`);
+    return assignedCount;
+  }
+
+  // ✅ NEW: Refresh words for all players (called on timer reset)
+  refreshAllPlayerWords() {
+    console.log("🔄 Refreshing words for all players due to timer reset...");
+
+    // Clear all unused auto-assigned words
+    for (const walletAddress of Object.keys(this.assignedWords)) {
+      const playerWords = this.assignedWords[walletAddress] || [];
+      // Remove unused auto-assigned words
+      this.assignedWords[walletAddress] = playerWords.filter(
+        (w) => w.used || w.type !== "period_auto_assignment"
+      );
+    }
+
+    // Auto-assign new words to all players (forced because this is a period reset)
+    const assignedCount = this.autoAssignRandomWordsToAllPlayers(true);
+
+    console.log(`🔄 Word refresh complete: ${assignedCount} new words assigned`);
+    return assignedCount;
   }
 
   getWordAssignmentStats() {
