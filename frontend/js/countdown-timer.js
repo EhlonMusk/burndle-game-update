@@ -44,14 +44,20 @@ class GameTimer {
         .padStart(2, "0")}`;
       this.countdownElement.textContent = formattedTime;
 
-      // ✅ NEW: Add visual warning in final 3 seconds
+      // ✅ NEW: Visual warning (red glow) in final 5 seconds, submission blocking in final 1 second
       const totalSeconds = minutes * 60 + seconds;
-      if (totalSeconds <= 3 && totalSeconds > 0) {
+
+      // Red glowing text for final 5 seconds
+      if (totalSeconds <= 5 && totalSeconds > 0) {
         this.countdownElement.classList.add("danger-countdown");
-        // Also apply danger styling to game interface
-        this.applyDangerStyling(true);
       } else {
         this.countdownElement.classList.remove("danger-countdown");
+      }
+
+      // Submission blocking in final 3 seconds
+      if (totalSeconds <= 3 && totalSeconds > 0) {
+        this.applyDangerStyling(true);
+      } else {
         this.applyDangerStyling(false);
       }
     }
@@ -1450,6 +1456,7 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log(`🚨 Total seconds remaining: ${totalSeconds}`);
     console.log(`⚠️ In danger window (≤3s): ${isDanger}`);
     console.log(`🎯 Would block submission: ${isDanger}`);
+    console.log(`🔴 Red glow active: ${totalSeconds <= 5 && totalSeconds > 0}`);
 
     // Force apply danger styling for testing
     gameTimer.applyDangerStyling(true);
