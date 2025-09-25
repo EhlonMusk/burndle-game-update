@@ -764,6 +764,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ✅ UPDATED: Submit word with better error handling
   async function handleSubmitWord() {
+    // ✅ NEW: Check if we're in the final 3 seconds before period reset
+    if (window.isInSubmissionDangerWindow && window.isInSubmissionDangerWindow()) {
+      showToast("⏰ Too close to reset! Wait for new word!", "warning", 3000);
+      console.log("🚫 Submit blocked - too close to period reset (≤3 seconds)");
+      return;
+    }
+
     // Check wallet connection and game state
     if (!window.isWalletConnected || !window.isWalletConnected()) {
       showToast("Please connect your wallet to play!", "warning");

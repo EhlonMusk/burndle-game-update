@@ -2419,3 +2419,50 @@ footer {
 .switch .detail-value {
   color: #333;
 }
+
+/* ============================== SUBMISSION BLOCKING STYLES ============================== */
+
+/* Danger countdown styling */
+.danger-countdown {
+  color: #ff4444 !important;
+  font-weight: bold;
+  animation: pulse-danger 1s infinite;
+  text-shadow: 0 0 5px rgba(255, 68, 68, 0.5);
+}
+
+@keyframes pulse-danger {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Blocked enter key styling */
+.submission-blocked {
+  background-color: #666 !important;
+  color: #999 !important;
+  opacity: 0.5;
+  cursor: not-allowed !important;
+  transition: all 0.2s ease;
+}
+
+.submission-blocked:hover {
+  background-color: #666 !important;
+  color: #999 !important;
+}
+
+/* Board danger styling */
+.submission-danger {
+  opacity: 0.7;
+  filter: grayscale(20%);
+  transition: all 0.3s ease;
+}
+
+/* Light mode variations */
+html.switch .danger-countdown {
+  color: #cc0000 !important;
+  text-shadow: 0 0 5px rgba(204, 0, 0, 0.3);
+}
+
+html.switch .submission-blocked {
+  background-color: #ccc !important;
+  color: #888 !important;
+}

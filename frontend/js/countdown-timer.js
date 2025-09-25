@@ -37,12 +37,23 @@ class GameTimer {
     const minutes = Math.floor(timeUntilReset / 60000);
     const seconds = Math.floor((timeUntilReset % 60000) / 1000);
 
-    // Update countdown display
+    // Update countdown display with danger indication
     if (this.countdownElement) {
       const formattedTime = `${minutes.toString().padStart(2, "0")}:${seconds
         .toString()
         .padStart(2, "0")}`;
       this.countdownElement.textContent = formattedTime;
+
+      // ✅ NEW: Add visual warning in final 3 seconds
+      const totalSeconds = minutes * 60 + seconds;
+      if (totalSeconds <= 3 && totalSeconds > 0) {
+        this.countdownElement.classList.add("danger-countdown");
+        // Also apply danger styling to game interface
+        this.applyDangerStyling(true);
+      } else {
+        this.countdownElement.classList.remove("danger-countdown");
+        this.applyDangerStyling(false);
+      }
     }
 
     // ✅ CHECK FOR PERIOD CHANGE (NEW GAME PERIOD)
@@ -977,6 +988,39 @@ class GameTimer {
     }
   }
 
+  // ✅ NEW: Check if we're in submission danger window (final 3 seconds)
+  isInSubmissionDangerWindow() {
+    const timeUntilReset = this.getTimeUntilReset();
+    const totalSeconds = timeUntilReset.minutes * 60 + timeUntilReset.seconds;
+    return totalSeconds <= 3;
+  }
+
+  // ✅ NEW: Apply visual styling to indicate submission blocking
+  applyDangerStyling(isDanger) {
+    const enterKey = document.querySelector('.keyboard-row button[data-key="enter"]');
+    const board = document.getElementById("board");
+
+    if (isDanger) {
+      // Add danger classes
+      if (enterKey) {
+        enterKey.classList.add("submission-blocked");
+        enterKey.title = "⏰ Too close to reset! Wait for new word!";
+      }
+      if (board) {
+        board.classList.add("submission-danger");
+      }
+    } else {
+      // Remove danger classes
+      if (enterKey) {
+        enterKey.classList.remove("submission-blocked");
+        enterKey.removeAttribute("title");
+      }
+      if (board) {
+        board.classList.remove("submission-danger");
+      }
+    }
+  }
+
   // ✅ Helper methods
   getAllStoredWallets() {
     const wallets = [];
@@ -1391,6 +1435,33 @@ class GameTimer {
 document.addEventListener("DOMContentLoaded", () => {
   const gameTimer = new GameTimer();
   window.gameTimer = gameTimer;
+
+  // ✅ NEW: Make submission danger window check available globally
+  window.isInSubmissionDangerWindow = () => gameTimer.isInSubmissionDangerWindow();
+
+  // ✅ NEW: Test function for submission blocking
+  window.testSubmissionBlocking = () => {
+    const timeInfo = gameTimer.getTimeUntilReset();
+    const isDanger = gameTimer.isInSubmissionDangerWindow();
+    const totalSeconds = timeInfo.minutes * 60 + timeInfo.seconds;
+
+    console.log("🧪 SUBMISSION BLOCKING TEST:");
+    console.log(`⏰ Time until reset: ${timeInfo.minutes}:${timeInfo.seconds.toString().padStart(2, '0')}`);
+    console.log(`🚨 Total seconds remaining: ${totalSeconds}`);
+    console.log(`⚠️ In danger window (≤3s): ${isDanger}`);
+    console.log(`🎯 Would block submission: ${isDanger}`);
+
+    // Force apply danger styling for testing
+    gameTimer.applyDangerStyling(true);
+    console.log("✅ Applied danger styling for 5 seconds...");
+
+    setTimeout(() => {
+      gameTimer.applyDangerStyling(false);
+      console.log("✅ Removed danger styling");
+    }, 5000);
+
+    return { timeInfo, isDanger, totalSeconds };
+  };
 
   // Make enhanced debugging functions available in console
   window.getCurrentPeriodInfo = () => gameTimer.getCurrentPeriodInfo();
