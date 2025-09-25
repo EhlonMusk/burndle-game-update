@@ -1,14 +1,37 @@
 {
-  "5M6pX3QczYErjU8MjRKpgWWzXfU69LwvdCmTQpt2Lai5-period-29313343": {
-    "transactionSignature": "yExWFEv3J2qR36gsg6MJZguQ9xvnmDKV1Ez2NPK5yPP4Nh52wMznF9c6LUpXR7yUjgsTjtiGVS699BtrPpcAiUo",
-    "amount": 0.01,
-    "timestamp": "2025-09-25T11:43:52.530Z",
-    "period": "period-29313343"
+  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29313429": {
+    "transactionSignature": "55ZGdxvE3VcLBCVFFocLURFFNDayGwbSpsHtqP3SokPczBeULNsUoXWyzRJm9Bd4qcn1sKJF2VeqV8stUpG6Ea2r",
+    "amount": 50000,
+    "timestamp": "2025-09-25T13:09:18.448Z",
+    "gracePeriod": false,
+    "period": "period-29313429"
   },
-  "5M6pX3QczYErjU8MjRKpgWWzXfU69LwvdCmTQpt2Lai5-period-29313344": {
-    "transactionSignature": "sAJbGu6vV7dzjYTqvXvHiZkvbYP2suT6xh3UKdNmQ6p6o7JFRyzakG1dq12KPpPEvbd9Z4PdSQYrEchZXvVwNw7",
-    "amount": 0.01,
-    "timestamp": "2025-09-25T11:44:07.327Z",
-    "period": "period-29313344"
+  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29313430": {
+    "transactionSignature": "2VNojDpXvhcHAVqGt2hifFwXAVZhned7yapVzqwMGQy8VTCb7YZ4B7teRx28qHFJmV3qt6oHch8N4bDMh2TZ5jTM",
+    "amount": 50000,
+    "timestamp": "2025-09-25T13:10:42.763Z",
+    "gracePeriod": false,
+    "period": "period-29313430"
+  },
+  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29313432": {
+    "transactionSignature": "2MBSWcNdic5h1cYxWrigQwniohjMbyasfQwcXBrCUG1366i3BEaZ89BosnboSh1tzj8TvckBB1guDEdG9VNBXMff",
+    "amount": 50000,
+    "timestamp": "2025-09-25T13:12:24.913Z",
+    "gracePeriod": false,
+    "period": "period-29313432"
+  },
+  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29313435": {
+    "transactionSignature": "4nZNV15VSHxu2PwWfKERbPKeLJqeYwSqXAW4hp7gKTd9ALJJDdSP2UvQ4KHnV8Xi1hnsxvwsbZoiJBfp39ZhcyKV",
+    "amount": 50000,
+    "timestamp": "2025-09-25T13:15:29.714Z",
+    "gracePeriod": false,
+    "period": "period-29313435"
+  },
+  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29313437": {
+    "transactionSignature": "5xBuWLA78fGEDXWcJoYASdqzpbz3Ry8C7ya1rFCpiiXR4pexT8szULWMJG15QD7sSGm1FP7AXjH2MdujN1WFu2nM",
+    "amount": 50000,
+    "timestamp": "2025-09-25T13:17:03.848Z",
+    "gracePeriod": true,
+    "period": "period-29313437"
   }
 }

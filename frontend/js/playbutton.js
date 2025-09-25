@@ -2,19 +2,30 @@
 // Add this to your main.js or create a separate file
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Wait for other scripts to load
+  console.log("🎮 Play button script: DOM loaded, setting up play button...");
+
+  // Wait for other scripts to load, increased delay to ensure deposit system is ready
   setTimeout(() => {
+    console.log("🎮 Play button script: Setting up play button after delay");
     setupPlayButton();
-  }, 1000);
+  }, 1500); // Increased delay to ensure deposit system is ready
 });
 
 function setupPlayButton() {
+  console.log("🎮 setupPlayButton called");
   const playButton = document.querySelector(".play-button");
 
   if (!playButton) {
     console.error("❌ Play button not found");
     return;
   }
+
+  console.log("✅ Play button found, setting up event handler");
+
+  // Check deposit system status at setup time
+  console.log("🔍 Deposit system status at setup:");
+  console.log("  - window.depositSystem exists:", !!window.depositSystem);
+  console.log("  - isInitialized:", window.depositSystem?.isInitialized?.());
 
   // ✅ Update button state on page load
   updatePlayButtonState();
@@ -35,15 +46,44 @@ function setupPlayButton() {
       return;
     }
 
-    // Check if deposit system is available
+    // Check if deposit system is available and initialized
     if (!window.depositSystem || !window.depositSystem.isInitialized()) {
-      console.error("❌ Deposit system not available");
-      showToast(
-        "Deposit system not ready yet, please wait...",
-        "warning",
-        3000
-      );
-      return;
+      console.error("❌ Deposit system not ready. Status:");
+      console.log("  - Deposit system debug info logged above");
+      console.log("  - window.depositSystem exists:", !!window.depositSystem);
+      console.log("  - isInitialized:", window.depositSystem?.isInitialized?.());
+      console.log("  - showModal function:", typeof window.depositSystem?.showModal);
+
+      // Try to force initialize if the system exists but isn't initialized
+      if (window.forceInitializeDepositSystem) {
+        console.log("🔧 Attempting to force initialize deposit system...");
+        try {
+          window.forceInitializeDepositSystem();
+
+          // Check if it worked
+          if (window.depositSystem && window.depositSystem.isInitialized()) {
+            console.log("✅ Force initialization successful, proceeding...");
+            // Continue with the function
+          } else {
+            throw new Error("Force initialization failed");
+          }
+        } catch (error) {
+          console.error("❌ Force initialization failed:", error);
+          showToast(
+            "Unable to initialize game system. Please refresh the page.",
+            "error",
+            4000
+          );
+          return;
+        }
+      } else {
+        showToast(
+          "Game system not loaded. Please refresh the page.",
+          "error",
+          4000
+        );
+        return;
+      }
     }
 
     try {

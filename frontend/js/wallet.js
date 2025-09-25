@@ -846,8 +846,8 @@ function handleWalletDisconnected() {
   walletPublicKey = null;
   updateConnectButton("Connect");
 
-  // Clear SOL balance
-  updateSOLBalanceDisplay("0.00");
+  // Clear BURN token balance
+  updateSOLBalanceDisplay("0");
 
   showToast("Wallet disconnected", "warning");
   localStorage.setItem("walletDisconnected", "true");
@@ -1159,7 +1159,8 @@ console.log("  window.debugWallet.forceNewGame() - Force start new game");
 console.log("  window.debugWallet.simulateDisconnect() - Test disconnect");
 console.log("  window.debugWallet.simulateReconnect() - Test reconnect");
 
-// ✅ SOL BALANCE FUNCTIONALITY
+// ✅ BURN TOKEN BALANCE FUNCTIONALITY
+const BURN_TOKEN_ADDRESS = "D1jpDVeZSbAKKfscWZfE5FVrpfyrCGk3aPDz9Jdsm1r4";
 let solBalanceInterval = null;
 
 /**
@@ -1168,7 +1169,9 @@ let solBalanceInterval = null;
 function updateSOLBalanceDisplay(balance) {
   const balanceElement = document.getElementById("sol-balance-display");
   if (balanceElement) {
-    balanceElement.textContent = balance;
+    // Format BURN tokens with commas for readability
+    const formattedBalance = parseInt(balance).toLocaleString();
+    balanceElement.textContent = formattedBalance;
   }
 }
 
@@ -1187,13 +1190,51 @@ async function getSOLBalance() {
       'confirmed'
     );
 
-    // Get balance in lamports (1 SOL = 1,000,000,000 lamports)
-    const balanceInLamports = await connection.getBalance(walletPublicKey);
-    const balanceInSOL = balanceInLamports / solanaWeb3.LAMPORTS_PER_SOL;
+    const tokenAddress = new solanaWeb3.PublicKey(BURN_TOKEN_ADDRESS);
 
-    return balanceInSOL;
+    try {
+      // Calculate the associated token account address
+      const TOKEN_PROGRAM_ID = new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
+      const ASSOCIATED_TOKEN_PROGRAM_ID = new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
+
+      const [associatedTokenAccount] = await solanaWeb3.PublicKey.findProgramAddress(
+        [
+          walletPublicKey.toBuffer(),
+          TOKEN_PROGRAM_ID.toBuffer(),
+          tokenAddress.toBuffer(),
+        ],
+        ASSOCIATED_TOKEN_PROGRAM_ID
+      );
+
+      const accountInfo = await connection.getAccountInfo(associatedTokenAccount);
+
+      if (!accountInfo) {
+        // Account doesn't exist, balance is 0
+        return 0;
+      }
+
+      // Parse token account data (simplified)
+      const data = accountInfo.data;
+      if (data.length >= 72) {
+        // Read 8 bytes starting at offset 64 as little-endian
+        let amount = 0;
+        for (let i = 0; i < 8; i++) {
+          amount += data[64 + i] * Math.pow(256, i);
+        }
+
+        // Convert from smallest unit (considering 9 decimals)
+        const balance = amount / Math.pow(10, 9);
+        return balance;
+      }
+
+      return 0;
+    } catch (error) {
+      // Token account doesn't exist or has no balance
+      console.log("BURN token account not found or error accessing it:", error.message);
+      return 0;
+    }
   } catch (error) {
-    console.warn("⚠️ Error fetching SOL balance:", error);
+    console.warn("⚠️ Error fetching BURN token balance:", error);
     return 0;
   }
 }
@@ -1204,11 +1245,10 @@ async function getSOLBalance() {
 async function updateSOLBalance() {
   try {
     const balance = await getSOLBalance();
-    const formattedBalance = balance.toFixed(2);
-    updateSOLBalanceDisplay(formattedBalance);
-    console.log(`💰 SOL Balance updated: ${formattedBalance} SOL`);
+    updateSOLBalanceDisplay(balance);
+    console.log(`🔥 BURN Token Balance updated: ${balance.toLocaleString()} BURN`);
   } catch (error) {
-    console.warn("⚠️ Error updating SOL balance:", error);
+    console.warn("⚠️ Error updating BURN token balance:", error);
     updateSOLBalanceDisplay("Error");
   }
 }

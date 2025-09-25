@@ -1,30 +1,87 @@
 // ============================== DEPOSIT SYSTEM FOR BURNDLE ==============================
 
-const DEPOSIT_AMOUNT = 0.01; // SOL amount required to play
-const ADMIN_WALLET = "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR"; // Using your wallet for testing - replace with actual admin wallet
+console.log("🔴🔴🔴 DEPOSIT SYSTEM: BRAND NEW VERSION LOADING! 🔴🔴🔴");
+window.DEPOSIT_SYSTEM_NEW_VERSION = true;
+console.log("🔴 DEPOSIT SYSTEM: Starting fresh rebuild");
 
-let depositSystemInitialized = false;
+const DEPOSIT_AMOUNT = 50000; // BURN tokens required to play
+// BURN_TOKEN_ADDRESS is already declared in wallet.js
+const ADMIN_WALLET = "5M6pX3QczYErjU8MjRKpgWWzXfU69LwvdCmTQpt2Lai5"; // Admin wallet for BURN token deposits
+
 let depositModalElement = null;
 
-// Initialize deposit system when DOM is ready
-document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(() => {
-    initializeDepositSystem();
-  }, 1000);
-});
+// Create deposit system object immediately
+window.depositSystem = {
+  showModal: null,
+  closeModal: null,
+  hasDeposited: null,
+  isInitialized: () => {
+    return !!(window.depositSystem.showModal && window.depositSystem.closeModal && window.depositSystem.hasDeposited);
+  }
+};
 
-function initializeDepositSystem() {
-  console.log("🏦 Initializing deposit system...");
+console.log("✅ Initial deposit system object created");
 
-  createDepositModal();
-  setupDepositListeners();
+// Show the deposit modal
+function showDepositModal() {
+  console.log("💰 showDepositModal called");
 
-  depositSystemInitialized = true;
-  console.log("✅ Deposit system initialized");
+  // Create modal if it doesn't exist
+  if (!depositModalElement) {
+    createDepositModal();
+  }
+
+  // Reset the modal state each time it's shown
+  resetDepositModalForNewPeriod();
+
+  if (depositModalElement) {
+    depositModalElement.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    console.log("💰 Deposit modal shown");
+  } else {
+    console.error("❌ Could not show deposit modal - modal element not found");
+  }
 }
 
-// Create the deposit modal with the specified UI
+// Close the deposit modal
+function closeDepositModal() {
+  console.log("💰 closeDepositModal called");
+
+  if (depositModalElement) {
+    depositModalElement.style.display = 'none';
+    document.body.style.overflow = 'auto';
+    console.log("💰 Deposit modal closed");
+  }
+}
+
+// Check if player has already deposited for current period
+async function hasPlayerDeposited(playerPublicKey) {
+  console.log("💰 hasPlayerDeposited called for:", playerPublicKey?.toString?.()?.slice(0,8) + "...");
+
+  try {
+    const API_BASE = "http://localhost:3000/api";
+    const response = await fetch(`${API_BASE}/game-status/${playerPublicKey}`);
+
+    if (!response.ok) {
+      console.warn("💰 Failed to check deposit status, assuming no deposit");
+      return false;
+    }
+
+    const data = await response.json();
+    const hasDeposited = data?.data?.hasDepositedThisPeriod || false;
+
+    console.log(`💰 Deposit check result: ${hasDeposited ? 'deposited' : 'needs deposit'}`);
+    return hasDeposited;
+  } catch (error) {
+    console.error("💰 Error checking deposit status:", error);
+    return false; // Assume no deposit on error
+  }
+}
+
+// Create the deposit modal
 function createDepositModal() {
+  console.log("💰 createDepositModal called");
+
   if (depositModalElement) {
     return depositModalElement;
   }
@@ -40,8 +97,8 @@ function createDepositModal() {
         <p>To play BURNdle, you need to deposit:</p>
 
         <div class="deposit-amount">
-          <span class="amount">${DEPOSIT_AMOUNT} SOL</span>
-          <span class="currency" id="deposit-usd-equivalent">≈ $1.50 USD</span>
+          <span class="amount">${DEPOSIT_AMOUNT.toLocaleString()} BURN</span>
+          <span class="currency">≈ $1.50 USD</span>
         </div>
 
         <div class="deposit-rules">
@@ -52,10 +109,6 @@ function createDepositModal() {
             <li><strong>Win:</strong> Deposit is returned and your streak increases</li>
             <li><strong>Lose:</strong> Deposit is burned and your streak is reset</li>
           </ul>
-        </div>
-
-        <div class="confirmation-warning">
-          <p><strong>Important:</strong> Please sign all prompted signature requests. This is to ensure your game is submitted correctly. Game starts automatically after deposit confirmation.</p>
         </div>
 
         <div class="deposit-status" id="deposit-status" style="display: none;">
@@ -73,90 +126,31 @@ function createDepositModal() {
     </div>
   `;
 
-  document.body.appendChild(modal);
-  depositModalElement = modal;
-
-  // Load SOL price for USD equivalent
-  updateSolPrice();
+  if (document.body) {
+    document.body.appendChild(modal);
+    depositModalElement = modal;
+    console.log("✅ Deposit modal created and added to DOM");
+  } else {
+    console.error("❌ Cannot create modal - document.body not available");
+  }
 
   return modal;
 }
 
-// Setup event listeners for deposit system
-function setupDepositListeners() {
-  // Listen for wallet connection changes
-  window.addEventListener('wallet-connected', handleDepositWalletConnected);
-  window.addEventListener('wallet-disconnected', handleDepositWalletDisconnected);
-}
+// Assign functions to deposit system
+function initializeDepositSystem() {
+  console.log("💰 Initializing deposit system...");
 
-// Show the deposit modal
-async function showDepositModal() {
-  // Check if there's already a completed game
-  if (window.gameComplete && window.gameId) {
-    showToast("Game already completed! Wait for next word.", "info", 3000);
-    return;
-  }
+  window.depositSystem.showModal = showDepositModal;
+  window.depositSystem.closeModal = closeDepositModal;
+  window.depositSystem.hasDeposited = hasPlayerDeposited;
 
-  // Check if there's already an active game
-  if (window.gameEnabled && window.gameId) {
-    showToast("Game already in progress!", "info", 3000);
-    return;
-  }
-
-  // Check if player has already deposited for this period
-  try {
-    const walletPublicKey = window.getWalletPublicKey();
-    if (walletPublicKey) {
-      const hasDeposited = await hasPlayerDeposited(walletPublicKey);
-      if (hasDeposited) {
-        showToast("You have already deposited for this period! Click Play Game to start.", "info", 4000);
-
-        // Try to start game directly if function exists
-        if (window.startNewGame) {
-          setTimeout(() => {
-            window.startNewGame(true); // auto-start since deposit exists
-          }, 1000);
-        }
-        return;
-      }
-    }
-  } catch (error) {
-    console.warn("💰 Could not check deposit status before showing modal:", error);
-    // Continue to show modal if check fails
-  }
-
-  if (!depositModalElement) {
-    createDepositModal();
-  }
-
-  // Update SOL price before showing
-  updateSolPrice();
-
-  // ✅ NEW: Reset button states when opening modal to ensure they're enabled
-  resetDepositStatus();
-
-  depositModalElement.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-
-  console.log("💰 Showing deposit modal");
-}
-
-// Close the deposit modal
-function closeDepositModal() {
-  if (depositModalElement) {
-    depositModalElement.style.display = 'none';
-    document.body.style.overflow = 'auto';
-
-    // Reset any loading states
-    resetDepositStatus();
-  }
-
-  console.log("❌ Deposit modal closed");
+  console.log("✅ Deposit system functions assigned");
 }
 
 // Handle the deposit and play action
 async function handleDepositAndPlay() {
-  console.log("💳 Processing deposit and play...");
+  console.log("💳 Processing BURN token deposit and play...");
 
   // Check wallet connection
   if (!window.isWalletConnected || !window.isWalletConnected()) {
@@ -173,10 +167,10 @@ async function handleDepositAndPlay() {
 
   try {
     // Show loading state
-    setDepositStatus("Preparing transaction...", true);
+    setDepositStatus("Preparing BURN token transaction...", true);
 
-    // Create and send deposit transaction
-    const signature = await createDepositTransaction(walletPublicKey);
+    // Create and send BURN token deposit transaction
+    const signature = await createBurnTokenTransaction(walletPublicKey);
 
     if (signature) {
       setDepositStatus("Confirming transaction...", true);
@@ -208,13 +202,15 @@ async function handleDepositAndPlay() {
       }
     }
   } catch (error) {
-    console.error("❌ Deposit failed:", error);
+    console.error("❌ BURN token deposit failed:", error);
 
     let errorMessage = "Deposit failed. Please try again.";
     if (error.message.includes("User rejected")) {
       errorMessage = "Transaction was cancelled.";
     } else if (error.message.includes("insufficient")) {
-      errorMessage = "Insufficient SOL balance.";
+      errorMessage = `Insufficient BURN tokens. You need ${DEPOSIT_AMOUNT.toLocaleString()} BURN tokens to play.`;
+    } else if (error.message.includes("don't have a BURN token account")) {
+      errorMessage = "You don't have BURN tokens in your wallet.";
     }
 
     setDepositStatus(errorMessage, false, true);
@@ -226,78 +222,133 @@ async function handleDepositAndPlay() {
   }
 }
 
-// Create and send deposit transaction to PDA
-async function createDepositTransaction(fromPublicKey) {
-  // Check for different possible global variable names (unpkg version uses 'solanaWeb3')
-  const solanaWeb3 = window.solanaWeb3 || window.solana || window.web3;
+// Create and send BURN token deposit transaction
+async function createBurnTokenTransaction(fromPublicKey) {
+  console.log("💳 Creating BURN token transaction...");
 
+  // Check for Solana Web3 library
+  const solanaWeb3 = window.solanaWeb3 || window.solana || window.web3;
   if (!solanaWeb3) {
-    console.error("Available globals:", Object.keys(window).filter(k => k.toLowerCase().includes('solana') || k.toLowerCase().includes('web3')));
     throw new Error("Solana Web3 library not loaded");
   }
 
-  const { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } = solanaWeb3;
+  const { Connection, PublicKey, Transaction, TransactionInstruction } = solanaWeb3;
 
-  // Connect to Solana devnet for testing
+  // Connect to Solana devnet
   const connection = new Connection("https://api.devnet.solana.com");
 
-  // Generate PDA for the game deposit
-  const pdaAddress = await generateGamePDA(fromPublicKey);
-
-  // Calculate lamports for deposit
-  const lamports = DEPOSIT_AMOUNT * LAMPORTS_PER_SOL;
-
-  // Create transaction
-  const transaction = new Transaction().add(
-    SystemProgram.transfer({
-      fromPubkey: fromPublicKey,
-      toPubkey: pdaAddress,
-      lamports: lamports,
-    })
-  );
-
-  // Get recent blockhash
-  const { blockhash } = await connection.getRecentBlockhash();
-  transaction.recentBlockhash = blockhash;
-  transaction.feePayer = fromPublicKey;
-
-  // Sign and send transaction
-  if (window.solana && window.solana.signAndSendTransaction) {
-    const { signature } = await window.solana.signAndSendTransaction(transaction);
-    console.log("📝 Transaction signature:", signature);
-    console.log("🔍 View transaction on Solana Explorer:", `https://explorer.solana.com/tx/${signature}?cluster=devnet`);
-    return signature;
-  } else {
-    throw new Error("Wallet does not support signing transactions");
-  }
-}
-
-// Generate PDA address for game deposits
-async function generateGamePDA(playerPublicKey) {
-  const solanaWeb3 = window.solanaWeb3 || window.solana || window.web3;
-
-  if (!solanaWeb3) {
-    throw new Error("Solana Web3 library not loaded");
-  }
-
-  const { PublicKey } = solanaWeb3;
-
-  // For simplicity, we'll just use the admin wallet as the destination
-  // In production, you'd generate a proper PDA with a Solana program
-
-  // Validate the admin wallet address
   try {
-    return new PublicKey(ADMIN_WALLET);
+    // Token program constants
+    const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
+    const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
+    const tokenMintAddress = new PublicKey(BURN_TOKEN_ADDRESS);
+    const destinationWallet = new PublicKey(ADMIN_WALLET);
+
+    // Calculate associated token accounts
+    const [fromTokenAccount] = await PublicKey.findProgramAddress(
+      [
+        fromPublicKey.toBuffer(),
+        TOKEN_PROGRAM_ID.toBuffer(),
+        tokenMintAddress.toBuffer(),
+      ],
+      ASSOCIATED_TOKEN_PROGRAM_ID
+    );
+
+    const [toTokenAccount] = await PublicKey.findProgramAddress(
+      [
+        destinationWallet.toBuffer(),
+        TOKEN_PROGRAM_ID.toBuffer(),
+        tokenMintAddress.toBuffer(),
+      ],
+      ASSOCIATED_TOKEN_PROGRAM_ID
+    );
+
+    // Check if source account exists and has sufficient balance
+    const fromAccountInfo = await connection.getAccountInfo(fromTokenAccount);
+    if (!fromAccountInfo) {
+      throw new Error("You don't have a BURN token account. Please make sure you have BURN tokens in your wallet.");
+    }
+
+    // Check if destination account exists, create if not
+    const toAccountInfo = await connection.getAccountInfo(toTokenAccount);
+    const transaction = new Transaction();
+
+    // Create destination token account if it doesn't exist
+    if (!toAccountInfo) {
+      const createAccountInstruction = new TransactionInstruction({
+        programId: ASSOCIATED_TOKEN_PROGRAM_ID,
+        keys: [
+          { pubkey: fromPublicKey, isSigner: true, isWritable: true },
+          { pubkey: toTokenAccount, isSigner: false, isWritable: true },
+          { pubkey: destinationWallet, isSigner: false, isWritable: false },
+          { pubkey: tokenMintAddress, isSigner: false, isWritable: false },
+          { pubkey: new PublicKey('11111111111111111111111111111111'), isSigner: false, isWritable: false },
+          { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+          { pubkey: new PublicKey('SysvarRent111111111111111111111111111111111'), isSigner: false, isWritable: false },
+        ],
+        data: new Uint8Array(0), // Empty data for ATA creation
+      });
+      transaction.add(createAccountInstruction);
+    }
+
+    // Convert deposit amount to token units (BURN token has 9 decimals)
+    const tokenAmount = DEPOSIT_AMOUNT * Math.pow(10, 9);
+
+    // Create SPL token transfer instruction using browser-compatible approach
+    const transferData = new Uint8Array(9);
+    transferData[0] = 3; // Transfer instruction opcode
+
+    // Convert amount to little-endian bytes (8 bytes for u64)
+    const amountBytes = new ArrayBuffer(8);
+    const amountView = new DataView(amountBytes);
+    amountView.setBigUint64(0, BigInt(tokenAmount), true); // true = little endian
+    transferData.set(new Uint8Array(amountBytes), 1);
+
+    const transferInstruction = new TransactionInstruction({
+      programId: TOKEN_PROGRAM_ID,
+      keys: [
+        { pubkey: fromTokenAccount, isSigner: false, isWritable: true },
+        { pubkey: toTokenAccount, isSigner: false, isWritable: true },
+        { pubkey: fromPublicKey, isSigner: true, isWritable: false },
+      ],
+      data: transferData,
+    });
+
+    transaction.add(transferInstruction);
+
+    // Get recent blockhash
+    const { blockhash } = await connection.getLatestBlockhash();
+    transaction.recentBlockhash = blockhash;
+    transaction.feePayer = fromPublicKey;
+
+    // Sign and send transaction using Phantom wallet
+    if (window.solana && window.solana.signAndSendTransaction) {
+      const { signature } = await window.solana.signAndSendTransaction(transaction);
+      console.log("📝 BURN Token Transfer signature:", signature);
+      console.log("🔍 View transaction on Solana Explorer:", `https://explorer.solana.com/tx/${signature}?cluster=devnet`);
+      return signature;
+    } else {
+      throw new Error("Wallet does not support signing transactions");
+    }
   } catch (error) {
-    console.error("❌ Invalid admin wallet address:", ADMIN_WALLET);
-    throw new Error("Invalid admin wallet address configured");
+    console.error("❌ Error creating BURN token transaction:", error);
+
+    // Provide user-friendly error messages
+    if (error.message.includes("don't have a BURN token account")) {
+      throw error;
+    } else if (error.message.includes("insufficient")) {
+      throw new Error(`Insufficient BURN tokens. You need ${DEPOSIT_AMOUNT.toLocaleString()} BURN tokens to play.`);
+    } else {
+      throw new Error("Failed to create deposit transaction. Please try again.");
+    }
   }
 }
 
 // Confirm transaction on blockchain
 async function confirmTransaction(signature) {
-  const solanaWeb3 = window.solanaWeb3 || window.solana || window.web3;
+  console.log("🔄 Confirming transaction:", signature);
 
+  const solanaWeb3 = window.solanaWeb3 || window.solana || window.web3;
   if (!solanaWeb3) {
     return false;
   }
@@ -307,7 +358,9 @@ async function confirmTransaction(signature) {
 
   try {
     const confirmation = await connection.confirmTransaction(signature, 'confirmed');
-    return !confirmation.value.err;
+    const success = !confirmation.value.err;
+    console.log("✅ Transaction confirmation result:", success);
+    return success;
   } catch (error) {
     console.error("❌ Transaction confirmation error:", error);
     return false;
@@ -316,10 +369,11 @@ async function confirmTransaction(signature) {
 
 // Record deposit on backend
 async function recordDepositOnBackend(walletPublicKey, transactionSignature) {
+  console.log("📝 Recording deposit on backend...");
+
   try {
     const API_BASE = "http://localhost:3000/api";
 
-    // Simplified deposit recording - only transaction signature needed
     const response = await fetch(`${API_BASE}/record-deposit`, {
       method: 'POST',
       headers: {
@@ -329,6 +383,8 @@ async function recordDepositOnBackend(walletPublicKey, transactionSignature) {
         walletAddress: walletPublicKey.toString(),
         transactionSignature,
         amount: DEPOSIT_AMOUNT,
+        tokenType: 'BURN',
+        tokenAddress: BURN_TOKEN_ADDRESS,
       }),
     });
 
@@ -356,17 +412,19 @@ async function recordDepositOnBackend(walletPublicKey, transactionSignature) {
 
 // Start game after successful deposit
 async function startGameAfterDeposit() {
+  console.log("🎮 Starting game after deposit...");
+
   try {
     if (window.startNewGame) {
       await window.startNewGame(true); // auto-start after deposit
 
-      // ✅ NEW: Apply difficulty restrictions AFTER the game has started and board is ready
+      // Apply difficulty restrictions after game setup
       setTimeout(() => {
         if (window.difficultyManager) {
-          console.log("🎯 Applying difficulty for new game after deposit confirmation and game setup");
+          console.log("🎯 Applying difficulty for new game after deposit");
           window.difficultyManager.applyDifficultyForNewGame();
         }
-      }, 500); // Give time for game setup to complete
+      }, 500);
 
       showToast("🎮 Game started! Good luck!", "success", 3000);
     } else {
@@ -375,24 +433,6 @@ async function startGameAfterDeposit() {
   } catch (error) {
     console.error("❌ Error starting game after deposit:", error);
     showToast("Deposit complete, but failed to start game. Please try again.", "warning", 4000);
-  }
-}
-
-// Update SOL price for USD equivalent display
-async function updateSolPrice() {
-  try {
-    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd');
-    const data = await response.json();
-    const solPrice = data.solana?.usd || 0;
-
-    const usdEquivalent = (DEPOSIT_AMOUNT * solPrice).toFixed(2);
-    const usdElement = document.getElementById('deposit-usd-equivalent');
-
-    if (usdElement) {
-      usdElement.textContent = `(~$${usdEquivalent} USD)`;
-    }
-  } catch (error) {
-    console.warn("⚠️ Failed to fetch SOL price:", error);
   }
 }
 
@@ -421,18 +461,18 @@ function setDepositStatus(message, isLoading = false, isError = false) {
     }
   }
 
-  // Check if this is the "Transaction confirmed" message
-  const isTransactionConfirmed = message.includes('Transaction confirmed') || message.includes('Starting game');
-
   // Disable both buttons during processing or after transaction confirmation
+  const isTransactionConfirmed = message.includes('Transaction confirmed') || message.includes('Starting game');
+  const shouldDisable = isLoading || isTransactionConfirmed;
+
   if (confirmBtn) {
-    confirmBtn.disabled = isLoading || isTransactionConfirmed;
-    confirmBtn.style.opacity = (isLoading || isTransactionConfirmed) ? '0.6' : '1';
+    confirmBtn.disabled = shouldDisable;
+    confirmBtn.style.opacity = shouldDisable ? '0.6' : '1';
   }
 
-  // ✅ NEW: Also disable Cancel button after transaction confirmation to prevent errors
+  // Also disable cancel button when transaction is confirmed
   if (cancelBtn) {
-    cancelBtn.disabled = isTransactionConfirmed;
+    cancelBtn.disabled = isTransactionConfirmed; // Only disable cancel on transaction success, not during loading
     cancelBtn.style.opacity = isTransactionConfirmed ? '0.6' : '1';
   }
 }
@@ -453,74 +493,42 @@ function resetDepositStatus() {
     confirmBtn.style.opacity = '1';
   }
 
-  // ✅ NEW: Also reset Cancel button state
   if (cancelBtn) {
     cancelBtn.disabled = false;
     cancelBtn.style.opacity = '1';
   }
 }
 
-// Handle wallet connection events
-function handleDepositWalletConnected(event) {
-  console.log("💰 Wallet connected, deposit system ready");
-}
+// Reset deposit modal for new game period
+function resetDepositModalForNewPeriod() {
+  console.log("🔄 Resetting deposit modal for new period");
+  resetDepositStatus();
 
-function handleDepositWalletDisconnected(event) {
-  console.log("💰 Wallet disconnected, closing deposit modal");
-  closeDepositModal();
-}
+  // Also reset any loading states in the modal
+  const confirmBtn = document.getElementById('deposit-confirm-btn');
+  const cancelBtn = document.querySelector('.deposit-cancel-btn');
 
-// Check if player has already deposited for current period
-async function hasPlayerDeposited(playerPublicKey) {
-  try {
-    const API_BASE = "http://localhost:3000/api";
-    const response = await fetch(`${API_BASE}/game-status/${playerPublicKey}`);
+  if (confirmBtn) {
+    confirmBtn.textContent = "Deposit & Play";
+    confirmBtn.disabled = false;
+    confirmBtn.style.opacity = '1';
+  }
 
-    if (!response.ok) {
-      console.warn("💰 Failed to check deposit status, assuming no deposit");
-      return false;
-    }
-
-    const data = await response.json();
-    const hasDeposited = data?.data?.hasDepositedThisPeriod || false;
-
-    console.log(`💰 Deposit check for ${playerPublicKey.slice(0, 8)}...: ${hasDeposited ? 'deposited' : 'needs deposit'}`);
-    return hasDeposited;
-  } catch (error) {
-    console.error("💰 Error checking deposit status:", error);
-    return false; // Assume no deposit on error
+  if (cancelBtn) {
+    cancelBtn.disabled = false;
+    cancelBtn.style.opacity = '1';
   }
 }
-
-// Global functions for use by other scripts
-window.depositSystem = {
-  showModal: showDepositModal,
-  closeModal: closeDepositModal,
-  hasDeposited: hasPlayerDeposited,
-  isInitialized: () => depositSystemInitialized
-};
 
 // Make functions globally available
-window.showDepositModal = showDepositModal;
-window.closeDepositModal = closeDepositModal;
 window.handleDepositAndPlay = handleDepositAndPlay;
+window.resetDepositModalForNewPeriod = resetDepositModalForNewPeriod;
 
-// Debug: Check available Solana Web3 globals
-setTimeout(() => {
-  const solanaKeys = Object.keys(window).filter(k => k.toLowerCase().includes('solana') || k.toLowerCase().includes('web3'));
-  console.log("💰 Available Solana/Web3 globals:", solanaKeys);
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeDepositSystem);
+} else {
+  initializeDepositSystem();
+}
 
-  // Test direct access
-  if (typeof window.solanaWeb3 !== 'undefined') {
-    console.log("✅ window.solanaWeb3 is available");
-  } else {
-    console.log("❌ window.solanaWeb3 not found, checking alternatives...");
-
-    // Check if it's just 'solana'
-    if (typeof window.solana !== 'undefined' && window.solana.Connection) {
-      console.log("✅ Found Solana Web3 under window.solana");
-    }
-  }
-}, 1000);
-
-console.log("💰 Deposit system loaded");
+console.log("✅ Deposit system script loaded successfully");
