@@ -145,64 +145,6 @@
         border: 1px solid rgba(220, 53, 69, 0.5);
       }
 
-      .assign-word {
-        background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
-        color: white;
-        border-radius: 12px;
-        padding: 2rem;
-        margin-bottom: 2rem;
-      }
-
-      .assign-word h3 {
-        margin-bottom: 1rem;
-        font-size: 1.3rem;
-      }
-
-      .assign-word-form {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-        flex-wrap: wrap;
-      }
-
-      .assign-word input {
-        padding: 0.75rem 1rem;
-        border: none;
-        border-radius: 8px;
-        font-size: 1rem;
-        background: rgba(255, 255, 255, 0.9);
-        color: #333;
-        min-width: 200px;
-      }
-
-      .assign-word input::placeholder {
-        color: #6c757d;
-      }
-
-      .assign-btn {
-        background: rgba(255, 255, 255, 0.2);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        color: white;
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-      }
-
-      .assign-btn:hover {
-        background: rgba(255, 255, 255, 0.3);
-        transform: translateY(-2px);
-      }
-
-      .assign-btn.danger {
-        background: rgba(220, 53, 69, 0.8);
-        border-color: rgba(220, 53, 69, 0.9);
-      }
-
-      .assign-btn.danger:hover {
-        background: rgba(220, 53, 69, 0.9);
-      }
 
       .search-section {
         background: white;
@@ -1472,14 +1414,6 @@
           padding: 1rem;
         }
 
-        .assign-word-form {
-          flex-direction: column;
-          align-items: stretch;
-        }
-
-        .assign-word input {
-          min-width: auto;
-        }
 
         table {
           font-size: 0.8rem;
@@ -2002,28 +1936,6 @@
         </div>
 
 
-        <!-- Word Assignment Section -->
-        <div class="assign-word">
-          <h3>🎯 Assign Word to Player</h3>
-          <div class="assign-word-form">
-            <input
-              type="text"
-              id="walletInput"
-              placeholder="Wallet Address (e.g., 4xQo...7KLm)"
-              maxlength="44"
-            />
-            <input
-              type="text"
-              id="wordInput"
-              placeholder="Word (5 letters)"
-              maxlength="5"
-            />
-            <button class="assign-btn" onclick="assignWord()">
-              Assign Word
-            </button>
-          </div>
-          <div id="assignMessage"></div>
-        </div>
 
         <!-- Search Section -->
         <div class="search-section">
@@ -2664,7 +2576,7 @@
                 <td>
                   ${
                     (player.current_streak > 0 || player.max_streak > 0)
-                      ? `<button class="assign-btn danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
+                      ? `<button class="control-btn warning" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
                             onclick="resetPlayerStreak('${player.wallet_address}')">
                       Reset All Streaks
                     </button>`
@@ -2963,65 +2875,6 @@
         }, 5000);
       }
 
-      async function assignWord() {
-        const walletAddress = document
-          .getElementById("walletInput")
-          .value.trim();
-        const word = document
-          .getElementById("wordInput")
-          .value.trim()
-          .toLowerCase();
-        const messageDiv = document.getElementById("assignMessage");
-
-        if (!walletAddress || !word) {
-          messageDiv.innerHTML =
-            '<div class="error">Please enter both wallet address and word</div>';
-          return;
-        }
-
-        if (word.length !== 5 || !/^[a-z]+$/.test(word)) {
-          messageDiv.innerHTML =
-            '<div class="error">Word must be exactly 5 letters and contain only alphabetic characters</div>';
-          return;
-        }
-
-        try {
-          const response = await fetch("/api/admin/assign-word", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${authToken}`,
-            },
-            body: JSON.stringify({ walletAddress, word }),
-          });
-
-          if (response.status === 401) {
-            logout();
-            return;
-          }
-
-          const data = await response.json();
-
-          if (data.success) {
-            messageDiv.innerHTML =
-              '<div class="success">✅ ' + data.message + "</div>";
-            document.getElementById("walletInput").value = "";
-            document.getElementById("wordInput").value = "";
-
-            setTimeout(() => {
-              loadPlayers();
-              messageDiv.innerHTML = "";
-            }, 2000);
-          } else {
-            messageDiv.innerHTML =
-              '<div class="error">❌ ' + data.error + "</div>";
-          }
-        } catch (error) {
-          console.error("Error assigning word:", error);
-          messageDiv.innerHTML =
-            '<div class="error">❌ Network error occurred</div>';
-        }
-      }
 
       function searchPlayers() {
         const searchTerm = document
