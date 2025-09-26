@@ -200,8 +200,16 @@ class GameTimer {
       // ✅ STEP 5: Enable new game functionality
       this.enableNewGame();
 
-      // ✅ STEP 5.1: Handle timer reset difficulty changes
+      // ✅ STEP 5.1: Handle timer reset difficulty changes (check pause state first)
       if (window.difficultyManager) {
+        // ✅ NEW: Check if game is paused - skip difficulty resets during pause
+        const isGamePaused = window.gamePauseHandler && window.gamePauseHandler.isGamePaused();
+
+        if (isGamePaused) {
+          console.log("⏸️ COUNTDOWN TIMER - Game is paused, skipping all difficulty resets");
+          return;
+        }
+
         console.log("🎯 COUNTDOWN TIMER - Checking for pending delayed difficulty restrictions");
         console.log("🎯 COUNTDOWN TIMER - Current difficulty state:", {
           pendingDelayedApplication: window.difficultyManager.pendingDelayedApplication,
@@ -325,8 +333,15 @@ class GameTimer {
 
                     // Still reset difficulty since streak was reset, but don't show negative messages
                     if (window.difficultyManager) {
-                      window.difficultyManager.resetDifficulty();
-                      console.log("🎯 COUNTDOWN TIMER - Reset difficulty for winner (streak continuation failed)");
+                      // ✅ NEW: Check if game is paused - skip difficulty reset during pause
+                      const isGamePaused = window.gamePauseHandler && window.gamePauseHandler.isGamePaused();
+
+                      if (isGamePaused) {
+                        console.log("⏸️ COUNTDOWN TIMER - Game is paused, skipping difficulty reset for winner");
+                      } else {
+                        window.difficultyManager.resetDifficulty();
+                        console.log("🎯 COUNTDOWN TIMER - Reset difficulty for winner (streak continuation failed)");
+                      }
                     }
                     return; // Don't show "didn't complete" message for winners
                   }
@@ -347,8 +362,15 @@ class GameTimer {
 
                 // ✅ NEW: Reset difficulty when streak was actually reset during period transition
                 if (window.difficultyManager) {
-                  window.difficultyManager.resetDifficulty();
-                  console.log("🎯 COUNTDOWN TIMER - Reset difficulty due to confirmed streak reset (period transition)");
+                  // ✅ NEW: Check if game is paused - skip difficulty reset during pause
+                  const isGamePaused = window.gamePauseHandler && window.gamePauseHandler.isGamePaused();
+
+                  if (isGamePaused) {
+                    console.log("⏸️ COUNTDOWN TIMER - Game is paused, skipping difficulty reset for streak reset");
+                  } else {
+                    window.difficultyManager.resetDifficulty();
+                    console.log("🎯 COUNTDOWN TIMER - Reset difficulty due to confirmed streak reset (period transition)");
+                  }
                 }
 
                 // Show toasts with original timing

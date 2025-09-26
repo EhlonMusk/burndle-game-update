@@ -82,6 +82,20 @@ class DisconnectedPlayerManager {
       return { skipped: true };
     }
 
+    // ✅ NEW: Check if game is paused - skip all streak resets during pause
+    const adminRoutes = require('../routes/admin');
+    const isGamePaused = adminRoutes.isGameCurrentlyPaused();
+
+    if (isGamePaused) {
+      console.log(`⏸️ Game is paused - skipping disconnected player check (${reason})`);
+      return {
+        success: true,
+        paused: true,
+        message: "Disconnected player check skipped during pause",
+        summary: { streaksIgnored: 0, streaksPreserved: 0, resetPlayers: [], preservedPlayers: [] }
+      };
+    }
+
     this.isRunning = true;
     this.lastCheckTime = new Date();
     this.totalChecks++;

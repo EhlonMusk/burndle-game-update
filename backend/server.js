@@ -289,6 +289,27 @@ class EnhancedDisconnectedPlayerManager {
     this.totalChecks++;
 
     try {
+      // ✅ CHECK: If game is paused, queue streak resets instead of executing them
+      const adminRoutes = require('./routes/admin');
+      const isPaused = adminRoutes.isGameCurrentlyPaused();
+
+      if (isPaused) {
+        console.log("⏸️ Game is paused - completely ignoring streak resets for incomplete words");
+        this.isRunning = false;
+        return {
+          success: true,
+          paused: true,
+          message: "Streak resets ignored during pause - players keep their streaks",
+          summary: {
+            streaksIgnored: 0,
+            streaksPreserved: 0,
+            resetPlayers: [],
+            preservedPlayers: [],
+            pauseMessage: "All streak resets skipped during pause mode"
+          }
+        };
+      }
+
       console.log(
         `🔄 Period transition disconnected player check (${reason})...`
       );
@@ -600,6 +621,140 @@ class EnhancedDisconnectedPlayerManager {
     }
   }
 
+  // ✅ NEW: Queue streak resets to execute when game is resumed
+  async queueStreakResetsForResume(reason = "period_transition") {
+    try {
+      console.log("📋 Queueing streak resets for when game resumes...");
+
+      const allStreaks = storage.getAllStreaks();
+      const currentPeriod = storage.getCurrentPeriodString();
+      const previousPeriod = storage.getPreviousPeriodString();
+      let queuedResets = [];
+
+      for (const player of allStreaks) {
+        const walletAddress = player.fullWallet;
+        const currentStreak = player.currentStreak || 0;
+
+        // Skip players with no streak to lose
+        if (currentStreak === 0) {
+          continue;
+        }
+
+        // Check if they played and won the previous period
+        const playedPreviousPeriod = storage.hasPlayedInPeriod(walletAddress, previousPeriod);
+        const wonPreviousPeriod = storage.hasWonInPeriod(walletAddress, previousPeriod);
+
+        if (wonPreviousPeriod) {
+          console.log(`✅ Player ${walletAddress.slice(0,8)}... won previous period - will preserve streak`);
+          continue;
+        }
+
+        // This player should have their streak reset when game resumes
+        queuedResets.push({
+          walletAddress,
+          currentStreak,
+          reason: "period_transition_while_paused",
+          queuedAt: new Date().toISOString(),
+          currentPeriod,
+          previousPeriod
+        });
+
+        console.log(`📋 Queued streak reset for ${walletAddress.slice(0,8)}... (streak: ${currentStreak})`);
+      }
+
+      // Store queued resets for when game resumes
+      if (!global.queuedStreakResets) {
+        global.queuedStreakResets = [];
+      }
+      global.queuedStreakResets = queuedResets;
+
+      console.log(`📋 Queued ${queuedResets.length} streak resets for when game resumes`);
+
+      return {
+        success: true,
+        queuedCount: queuedResets.length,
+        queuedResets: queuedResets.map(r => ({
+          wallet: r.walletAddress.slice(0,8) + "...",
+          streak: r.currentStreak
+        }))
+      };
+
+    } catch (error) {
+      console.error("Error queueing streak resets:", error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // ✅ NEW: Execute queued streak resets (called when game resumes)
+  async executeQueuedStreakResets() {
+    try {
+      if (!global.queuedStreakResets || global.queuedStreakResets.length === 0) {
+        console.log("📋 No queued streak resets to execute");
+        return { success: true, executedCount: 0 };
+      }
+
+      console.log(`📋 Executing ${global.queuedStreakResets.length} queued streak resets...`);
+
+      const resetPlayers = [];
+      const gameEngine = require('./utils/gameEngine');
+
+      for (const queuedReset of global.queuedStreakResets) {
+        const { walletAddress, currentStreak } = queuedReset;
+
+        // Reset the streak
+        const streakData = storage.getStreakData(walletAddress);
+        const oldStreak = streakData.currentStreak || 0;
+        streakData.currentStreak = 0;
+        streakData.lastPlayedDate = storage.getCurrentPeriodString();
+        storage.saveStreakData(walletAddress, streakData);
+
+        resetPlayers.push({
+          walletAddress: walletAddress.slice(0,8) + "...",
+          oldStreak,
+          newStreak: 0
+        });
+
+        console.log(`📋 Executed queued streak reset for ${walletAddress.slice(0,8)}... (${oldStreak} → 0)`);
+
+        // Broadcast reset to admins
+        if (global.broadcastToAdmins) {
+          global.broadcastToAdmins("streak-reset", {
+            walletAddress,
+            oldStreak,
+            newStreak: 0,
+            reason: "queued_period_transition_reset",
+            timestamp: new Date().toISOString(),
+            wasQueued: true
+          });
+        }
+
+        // Broadcast to player if connected
+        if (global.broadcastToPlayer) {
+          global.broadcastToPlayer(walletAddress, "streak-reset-notification", {
+            oldStreak,
+            newStreak: 0,
+            reason: "queued_period_transition_reset"
+          });
+        }
+      }
+
+      // Clear the queue
+      global.queuedStreakResets = [];
+
+      console.log(`📋 Successfully executed ${resetPlayers.length} queued streak resets`);
+
+      return {
+        success: true,
+        executedCount: resetPlayers.length,
+        resetPlayers
+      };
+
+    } catch (error) {
+      console.error("Error executing queued streak resets:", error);
+      return { success: false, error: error.message };
+    }
+  }
+
   // ✅ FIXED: Start periodic checks (but much less frequent since we're using period transitions)
   startPeriodicChecks() {
     // ✅ IMPORTANT: Don't run automatic checks every 1 minute
@@ -696,6 +851,9 @@ class EnhancedDisconnectedPlayerManager {
 // ✅ Create the enhanced manager
 const enhancedDisconnectedPlayerManager =
   new EnhancedDisconnectedPlayerManager();
+
+// ✅ Make enhanced manager available globally for admin routes
+global.enhancedDisconnectedPlayerManager = enhancedDisconnectedPlayerManager;
 
 // ✅ Make functions available globally
 global.checkDisconnectedPlayersForPeriodTransition = (reason) =>
@@ -997,7 +1155,9 @@ app.get("/api/check-previous-period-win/:walletAddress", async (req, res) => {
     console.log(`🔍 Previous period: ${previousPeriod}`);
 
     // Check if player won in the previous period
-    const wonPreviousPeriod = storage.checkWinner(walletAddress, previousPeriod);
+    const previousKey = `${walletAddress}-${previousPeriod}`;
+    const previousGameData = storage.dailyGames.get(previousKey);
+    const wonPreviousPeriod = previousGameData && previousGameData.isWin === true;
 
     console.log(`🔍 Player ${walletAddress.slice(0, 8)}... won previous period (${previousPeriod}):`, wonPreviousPeriod);
 

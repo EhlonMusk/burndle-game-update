@@ -525,6 +525,20 @@ class GameEngine {
    */
   async handleIncompleteGameStreakReset(walletAddress) {
     try {
+      // ✅ CHECK: If game is paused, skip streak reset
+      const adminRoutes = require('../routes/admin');
+      const isGamePaused = adminRoutes.isGameCurrentlyPaused();
+
+      if (isGamePaused) {
+        console.log(`⏸️ Game is paused - skipping incomplete game streak reset for ${walletAddress.slice(0, 8)}...`);
+        return {
+          success: true,
+          pauseProtected: true,
+          message: "Streak preserved during pause - incomplete game ignored",
+          streakReset: false
+        };
+      }
+
       console.log(`💔 Handling incomplete game streak reset for ${walletAddress.slice(0, 8)}...`);
 
       const streakData = storage.getStreakData(walletAddress);

@@ -110,6 +110,70 @@
         letter-spacing: 1px;
       }
 
+      /* Game Period Countdown Box Styles */
+      .game-period-countdown-box {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        text-align: center;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        width: 100%;
+        margin-top: 2rem;
+      }
+
+      .game-period-countdown-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .game-period-countdown-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+      }
+
+      .countdown-display {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+      }
+
+      .countdown-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .countdown-value {
+        font-size: 3rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+      }
+
+      .countdown-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .game-period-title {
+        color: #6c757d;
+        font-size: 1.1rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+
       .main-content {
         padding: 2rem;
       }
@@ -2454,13 +2518,50 @@
               </div>
               <div class="stat-card">
                 <div class="stat-number" id="admin-countdown">00:00</div>
-                <div class="stat-label">Next Period</div>
+                <div class="stat-label">Next Word</div>
               </div>
             `;
+
+            // Add the Game Period Countdown box after the stats
+            const gamePeriodHtml = `
+              <div class="game-period-countdown-box">
+                <div class="game-period-countdown-content">
+                  <div class="countdown-display">
+                    <div class="countdown-item">
+                      <span class="countdown-value" id="admin-game-days">00</span>
+                      <span class="countdown-label">Days</span>
+                    </div>
+                    <div class="countdown-item">
+                      <span class="countdown-value" id="admin-game-hours">00</span>
+                      <span class="countdown-label">Hours</span>
+                    </div>
+                    <div class="countdown-item">
+                      <span class="countdown-value" id="admin-game-minutes">00</span>
+                      <span class="countdown-label">Minutes</span>
+                    </div>
+                    <div class="countdown-item">
+                      <span class="countdown-value" id="admin-game-seconds">00</span>
+                      <span class="countdown-label">Seconds</span>
+                    </div>
+                  </div>
+                  <div class="game-period-title">Game Period Countdown</div>
+                </div>
+              </div>
+            `;
+
             document.getElementById("statsSection").innerHTML = statsHtml;
+
+            // Add the Game Period Countdown box separately after the stats section
+            const statsSection = document.getElementById("statsSection");
+            const gamePeriodContainer = document.createElement('div');
+            gamePeriodContainer.innerHTML = gamePeriodHtml;
+            statsSection.parentNode.insertBefore(gamePeriodContainer, statsSection.nextSibling);
 
             // Start the countdown timer after stats are loaded
             initializeAdminCountdown();
+
+            // Initialize the game period countdown
+            initializeAdminGamePeriodCountdown();
           }
         } catch (error) {
           console.error("Error loading stats:", error);
@@ -2516,6 +2617,100 @@
           countdownElement.style.fontWeight = "";
         }
       }
+
+      // ✅ NEW: Admin Game Period Countdown Timer
+      let adminGamePeriodCountdownInterval = null;
+
+      function initializeAdminGamePeriodCountdown() {
+        console.log("🎮 Initializing admin game period countdown");
+
+        // Clear any existing interval
+        if (adminGamePeriodCountdownInterval) {
+          clearInterval(adminGamePeriodCountdownInterval);
+        }
+
+        // Get stored end time from localStorage
+        const storedEndTime = localStorage.getItem('gameEndTime');
+
+        if (storedEndTime) {
+          const endTimestamp = parseInt(storedEndTime, 10);
+          const now = new Date().getTime();
+
+          console.log("🎮 Admin - stored end timestamp:", endTimestamp, new Date(endTimestamp));
+          console.log("🎮 Admin - current time:", now, new Date(now));
+
+          if (endTimestamp > now) {
+            // Game is still running, start countdown
+            console.log("🎮 Admin - starting game period countdown");
+            startAdminGamePeriodCountdown(endTimestamp);
+          } else {
+            // Game period ended, show zeros
+            console.log("🎮 Admin - game period ended, showing zeros");
+            updateAdminGamePeriodDisplay("00", "00", "00", "00");
+          }
+        } else {
+          console.log("🎮 Admin - no stored end time, showing zeros");
+          // No active game period
+          updateAdminGamePeriodDisplay("00", "00", "00", "00");
+        }
+      }
+
+      function startAdminGamePeriodCountdown(endTimestamp) {
+        console.log("🎮 Starting admin game period countdown with endTimestamp:", endTimestamp);
+
+        // Update immediately
+        updateAdminGamePeriodCountdown(endTimestamp);
+
+        // Update every second
+        adminGamePeriodCountdownInterval = setInterval(() => {
+          updateAdminGamePeriodCountdown(endTimestamp);
+        }, 1000);
+      }
+
+      function updateAdminGamePeriodCountdown(endTimestamp) {
+        const now = new Date().getTime();
+        const distance = endTimestamp - now;
+
+        if (distance < 0) {
+          // Countdown finished
+          clearInterval(adminGamePeriodCountdownInterval);
+          adminGamePeriodCountdownInterval = null;
+          updateAdminGamePeriodDisplay("00", "00", "00", "00");
+          localStorage.removeItem('gameEndTime');
+          localStorage.removeItem('gameStartedAt');
+          console.log("🎮 Admin - game period countdown ended");
+          return;
+        }
+
+        // Calculate time units
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        // Format with leading zeros
+        const formattedDays = days.toString().padStart(2, '0');
+        const formattedHours = hours.toString().padStart(2, '0');
+        const formattedMinutes = minutes.toString().padStart(2, '0');
+        const formattedSeconds = seconds.toString().padStart(2, '0');
+
+        updateAdminGamePeriodDisplay(formattedDays, formattedHours, formattedMinutes, formattedSeconds);
+      }
+
+      function updateAdminGamePeriodDisplay(days, hours, minutes, seconds) {
+        const daysElement = document.getElementById("admin-game-days");
+        const hoursElement = document.getElementById("admin-game-hours");
+        const minutesElement = document.getElementById("admin-game-minutes");
+        const secondsElement = document.getElementById("admin-game-seconds");
+
+        if (daysElement) daysElement.textContent = days;
+        if (hoursElement) hoursElement.textContent = hours;
+        if (minutesElement) minutesElement.textContent = minutes;
+        if (secondsElement) secondsElement.textContent = seconds;
+
+        console.log("🎮 Admin countdown updated:", { days, hours, minutes, seconds });
+      }
+
 
       // NEW: Load current wallet configuration with fees display
       async function loadCurrentWalletConfig() {

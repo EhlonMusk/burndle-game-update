@@ -234,6 +234,19 @@ router.post("/handle-incomplete-game", async (req, res) => {
   }
 
   try {
+    // ✅ CHECK: If game is paused, skip streak reset
+    const adminRoutes = require('./admin');
+    const isGamePaused = adminRoutes.isGameCurrentlyPaused();
+
+    if (isGamePaused) {
+      console.log(`⏸️ Game is paused - skipping incomplete game streak reset for ${walletAddress.slice(0, 8)}...`);
+      return res.json({
+        success: true,
+        pauseProtected: true,
+        message: "Streak preserved during pause - incomplete game ignored",
+        streakReset: false
+      });
+    }
     const streakData = storage.getStreakData(walletAddress);
     const oldStreak = streakData.currentStreak;
     const today = storage.getTodayString(); // Current period
@@ -333,6 +346,20 @@ router.post("/handle-disconnected-player", async (req, res) => {
 
   if (!walletAddress) {
     return res.status(400).json({ error: "Missing wallet address" });
+  }
+
+  // ✅ CHECK: If game is paused, skip streak reset
+  const adminRoutes = require('./admin');
+  const isGamePaused = adminRoutes.isGameCurrentlyPaused();
+
+  if (isGamePaused) {
+    console.log(`⏸️ Game is paused - skipping disconnected player streak reset for ${walletAddress.slice(0, 8)}...`);
+    return res.json({
+      success: true,
+      pauseProtected: true,
+      message: "Streak preserved during pause - disconnected player ignored",
+      streakReset: false
+    });
   }
 
   try {

@@ -998,6 +998,22 @@ router.post("/handle-incomplete-game", async (req, res) => {
       if (currentPeriodGameData && !currentPeriodGameData.isWin) {
         console.log(`🔍 Found incomplete game data in current period for ${walletAddress.slice(0, 8)}...`);
 
+        // ✅ Check if game is paused - skip streak reset during pause
+        const adminRoutes = require('./admin');
+        const isGamePaused = adminRoutes.isGameCurrentlyPaused();
+
+        if (isGamePaused) {
+          console.log(`⏸️ Game is paused - skipping incomplete game streak reset for ${walletAddress.slice(0, 8)}...`);
+
+          return res.json({
+            success: true,
+            message: "Incomplete game detected during pause - streak preserved",
+            oldStreak: storage.getStreakData(walletAddress).currentStreak,
+            newStreak: storage.getStreakData(walletAddress).currentStreak,
+            pauseProtected: true
+          });
+        }
+
         // Reset streak for the incomplete game
         const streakResetResult = await gameEngine.handleIncompleteGameStreakReset(walletAddress);
 
@@ -1020,6 +1036,30 @@ router.post("/handle-incomplete-game", async (req, res) => {
     }
 
     console.log(`💔 Found incomplete game ${activeGame.gameId} with ${activeGame.guesses.length} guesses`);
+
+    // ✅ Check if game is paused - skip streak reset during pause
+    const adminRoutes = require('./admin');
+    const isGamePaused = adminRoutes.isGameCurrentlyPaused();
+
+    if (isGamePaused) {
+      console.log(`⏸️ Game is paused - skipping incomplete game streak reset for ${walletAddress.slice(0, 8)}...`);
+
+      // Remove the incomplete game but preserve streak
+      storage.deleteGame(activeGame.gameId);
+      console.log(`🗑️ Deleted incomplete game ${activeGame.gameId} (streak preserved due to pause)`);
+
+      return res.json({
+        success: true,
+        hasIncompleteGame: true,
+        gameId: activeGame.gameId,
+        guesses: activeGame.guesses,
+        answer: activeGame.answer.toUpperCase(),
+        oldStreak: storage.getStreakData(walletAddress).currentStreak,
+        newStreak: storage.getStreakData(walletAddress).currentStreak,
+        pauseProtected: true,
+        message: "Incomplete game handled during pause - streak preserved"
+      });
+    }
 
     // Reset streak for incomplete game
     const streakResetResult = await gameEngine.handleIncompleteGameStreakReset(walletAddress);

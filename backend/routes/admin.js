@@ -315,6 +315,11 @@ router.post("/game-resume", authenticateAdmin, (req, res) => {
     pausedBy = null;
     pausedAt = null;
 
+    // ✅ REMOVED: No longer queueing streak resets during pause
+    // During pause, streak resets are completely ignored, not queued
+    console.log("🔄 Game resumed - streak resets will work normally from now on");
+
+
     // Your existing broadcasts
     if (global.broadcastToAll) {
       global.broadcastToAll("game-resumed", {
@@ -414,13 +419,15 @@ router.post("/reset-all-data", authenticateAdmin, (req, res) => {
     console.log(`✅ All data reset completed by ${resetBy}`);
 
     // ✅ NEW: Broadcast difficulty reset to all players
-    if (global.broadcastToAll) {
-      global.broadcastToAll("difficulty-reset", {
-        resetBy: resetBy,
-        resetAt: resetAt,
-        message: "Difficulty reset - all rows restored to 6",
-        rows: 6
+    if (global.broadcastToAllPlayers) {
+      global.broadcastToAllPlayers("difficulty-reset", {
+        resetBy: adminUsername || "admin",
+        resetAt: new Date().toISOString(),
+        message: "Admin reset - difficulty restored to 6 rows",
+        rows: 6,
+        reason: "admin_general_reset"
       });
+      console.log("📡 Broadcasting difficulty reset to all players");
     }
 
     // Your existing broadcasts
@@ -498,11 +505,20 @@ router.post("/countdown-completion-reset", (req, res) => {
       );
     }
 
-    // ✅ RESET EVERYTHING: Complete wipe of all player data
-    storage.activeGames.clear();
-    storage.walletStreaks.clear();
-    storage.dailyGames.clear();
-    storage.assignedWords = {}; // ✅ FIXED: Should be object, not array
+    // ✅ RESET EVERYTHING: Complete wipe of all player data (check pause state first)
+    if (isGamePaused) {
+      console.log("⏸️ Game is paused, preserving streaks during countdown completion");
+      // Clear active games and daily games, but preserve streaks during pause
+      storage.activeGames.clear();
+      storage.dailyGames.clear();
+      storage.assignedWords = {}; // ✅ FIXED: Should be object, not array
+    } else {
+      // Normal countdown completion - clear everything
+      storage.activeGames.clear();
+      storage.walletStreaks.clear();
+      storage.dailyGames.clear();
+      storage.assignedWords = {}; // ✅ FIXED: Should be object, not array
+    }
 
     // ✅ NEW: Auto-assign random words to all players for new period
     console.log("🎲 COUNTDOWN RESET - Auto-assigning random words for new period");
@@ -527,15 +543,18 @@ router.post("/countdown-completion-reset", (req, res) => {
 
     console.log(`✅ Countdown completion reset completed at ${resetAt}`);
 
-    // ✅ NEW: Broadcast difficulty reset to all players for countdown completion
-    if (global.broadcastToAll) {
-      global.broadcastToAll("difficulty-reset", {
-        resetBy: resetBy,
-        resetAt: resetAt,
-        message: "New period - difficulty reset to 6 rows for all players",
+    // ✅ NEW: Broadcast difficulty reset to all players (check pause state first)
+    if (isGamePaused) {
+      console.log("⏸️ Game is paused, skipping difficulty reset broadcast for period transition");
+    } else if (global.broadcastToAllPlayers) {
+      global.broadcastToAllPlayers("difficulty-reset", {
+        resetBy: "system",
+        resetAt: new Date().toISOString(),
+        message: "Period transition - difficulty restored to 6 rows",
         rows: 6,
-        reason: "countdown_completion"
+        reason: "period_transition"
       });
+      console.log("📡 Broadcasting difficulty reset to all players for period transition");
     }
 
     // Broadcast to all clients
