@@ -1,40 +1,9 @@
 {
-  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29314453": {
-    "transactionSignature": "3qbAuvbWz7XA1WcxuKv7Sz1bJzUL78SXM3PA9RRSicZvweR8qzhnMP4ysFQsegNXdkbhgTabwYTFwhMmmmavgfp4",
+  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29314568": {
+    "transactionSignature": "3roeArhzoPgA3wPPdouoGcdC3mUYRdxEaL8aAaSmWMQTmDDsdgDxApFDYYteLVgaCinHYsnWyZJYQpKHTFnGD3Ku",
     "amount": 100000,
-    "timestamp": "2025-09-26T06:13:23.335Z",
-    "gracePeriod": false,
-    "period": "period-29314453"
-  },
-  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29314455": {
-    "transactionSignature": "4NjyNg2aHcYr7WpZiFM5Q7ujjHLkNysjwXLa2dHGSonsx1RdRp9q2REEGZKKuAb1zLDobPD5hrmDDPcZtwKznwxT",
-    "amount": 100000,
-    "timestamp": "2025-09-26T06:15:13.598Z",
-    "gracePeriod": false,
-    "period": "period-29314455"
-  },
-  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29314461": {
-    "transactionSignature": "2zhtvpHqMJRMXmaD9ojafx3xuQXkVdCywPo7uJQoECZg66d1AKKUAAjFzEaTnFf9E93tF5t1GGS2HNrFfcmGbJhG",
-    "amount": 100000,
-    "timestamp": "2025-09-26T06:20:28.304Z",
-    "gracePeriod": false,
-    "period": "period-29314461",
-    "originalPeriod": "period-29314460",
-    "convertedByGracePeriod": true,
-    "conversionTimestamp": "2025-09-26T06:21:07.740Z"
-  },
-  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29314462": {
-    "transactionSignature": "4RVYsbkPX1YzGENNFGpYi5UEAFHmsFFh5nQuE8eJPSK332a7CVcoP5MJGQfTg5C3f9UTCnx9wzvgct5x64gtgBpC",
-    "amount": 100000,
-    "timestamp": "2025-09-26T06:22:17.829Z",
-    "gracePeriod": false,
-    "period": "period-29314462"
-  },
-  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29314465": {
-    "transactionSignature": "5YVJU2jKMQV3Bvtpi2XqFLCZAEixGJkRXikRnS1og1LTo3PzesEDEnK5ntbSgwNsyzamR1PYpoAKb6LgAQkAQyyu",
-    "amount": 100000,
-    "timestamp": "2025-09-26T06:25:01.333Z",
+    "timestamp": "2025-09-26T08:08:01.156Z",
     "gracePeriod": true,
-    "period": "period-29314465"
+    "period": "period-29314568"
   }
 }

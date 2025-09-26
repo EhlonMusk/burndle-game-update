@@ -120,18 +120,37 @@
             padding: 20px;
         }
 
-        .refresh-btn {
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .pagination-btn {
             background: #667eea;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 8px 15px;
             border-radius: 5px;
             cursor: pointer;
-            margin-bottom: 20px;
+            font-size: 14px;
         }
 
-        .refresh-btn:hover {
+        .pagination-btn:hover:not(:disabled) {
             background: #5a6fd8;
+        }
+
+        .pagination-btn:disabled {
+            background: #444;
+            color: #888;
+            cursor: not-allowed;
+        }
+
+        .pagination-info {
+            color: #888;
+            font-size: 14px;
         }
 
         .treasury-address {
@@ -148,7 +167,6 @@
     <div class="header">
         <h1>🏦 BURNdle Treasury Dashboard</h1>
         <p>Automated token burns and returns with full transparency</p>
-        <button class="refresh-btn" onclick="loadDashboard()">🔄 Refresh Data</button>
     </div>
 
     <div class="stats-grid">
@@ -175,9 +193,18 @@
         <div id="transactions-list" class="loading">
             Loading transactions...
         </div>
+        <div class="pagination">
+            <button class="pagination-btn" id="prev-btn" onclick="changePage(-1)" disabled>← Previous</button>
+            <span class="pagination-info" id="page-info">Page 1</span>
+            <button class="pagination-btn" id="next-btn" onclick="changePage(1)" disabled>Next →</button>
+        </div>
     </div>
 
     <script>
+        let allTransactions = [];
+        let currentPage = 1;
+        const itemsPerPage = 10;
+
         async function loadDashboard() {
             try {
                 // Load treasury stats
@@ -197,12 +224,13 @@
                     document.getElementById('total-returned').textContent = `${(stats.totalReturned || 0).toLocaleString()} BURN`;
                 }
 
-                // Load recent transactions
-                const txResponse = await fetch('/api/treasury/transactions?limit=50');
+                // Load all transactions
+                const txResponse = await fetch('/api/treasury/transactions?limit=1000');
                 const txData = await txResponse.json();
 
                 if (txData.success) {
-                    displayTransactions(txData.data);
+                    allTransactions = txData.data || [];
+                    displayCurrentPage();
                 }
             } catch (error) {
                 console.error('Error loading dashboard:', error);
@@ -211,11 +239,46 @@
             }
         }
 
+        function displayCurrentPage() {
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageTransactions = allTransactions.slice(startIndex, endIndex);
+
+            displayTransactions(pageTransactions);
+            updatePaginationControls();
+        }
+
+        function changePage(direction) {
+            const totalPages = Math.ceil(allTransactions.length / itemsPerPage);
+            const newPage = currentPage + direction;
+
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                displayCurrentPage();
+            }
+        }
+
+        function updatePaginationControls() {
+            const totalPages = Math.ceil(allTransactions.length / itemsPerPage);
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const pageInfo = document.getElementById('page-info');
+
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages || totalPages === 0;
+
+            if (totalPages > 0) {
+                pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+            } else {
+                pageInfo.textContent = 'No transactions';
+            }
+        }
+
         function displayTransactions(transactions) {
             const container = document.getElementById('transactions-list');
 
             if (!transactions || transactions.length === 0) {
-                container.innerHTML = '<div class="loading">No transactions yet</div>';
+                container.innerHTML = '<div class="loading">No transactions on this page</div>';
                 return;
             }
 

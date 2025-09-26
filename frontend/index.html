@@ -22,6 +22,7 @@
     <script src="js/pause-handler.js"></script>
     <script src="js/leaderboard.js"></script>
     <script src="js/burnmodal.js"></script>
+    <script src="js/rules-modal.js"></script>
 
     <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
     <link rel="stylesheet" href="css/styles.css" />
@@ -182,6 +183,115 @@
               🔄 Refresh Data
             </button>
             <div class="last-updated" id="last-updated">Never updated</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rules Modal -->
+    <div id="rules-modal" class="rules-modal">
+      <div class="rules-content">
+        <div class="rules-header">
+          <button class="rules-close" onclick="closeRulesModal()">
+            &times;
+          </button>
+          <h2 class="rules-title">📋 Game Rules</h2>
+          <p class="rules-subtitle"></p>
+        </div>
+
+        <div class="rules-body">
+          <!-- Game Flow Rules -->
+          <div class="rules-section">
+            <div class="section-title">🎮 Game Flow</div>
+            <div class="rules-list">
+              <div class="rule-item">
+                <span class="rule-number">1</span>
+                <div class="rule-text">
+                  <strong>Deposit Required:</strong> Each player must deposit 100,000 BURN tokens to participate in a BURNDle round
+                </div>
+              </div>
+              <div class="rule-item">
+                <span class="rule-number">2</span>
+                <div class="rule-text">
+                  <strong>Game Period:</strong> You have 30 minutes to guess a 5-letter word with up to 6 attempts
+                </div>
+              </div>
+              <div class="rule-item">
+                <span class="rule-number">3</span>
+                <div class="rule-text">
+                  <strong>Win Condition:</strong> Guess the correct work to increase your streak and get your deposit back
+                </div>
+              </div>
+              <div class="rule-item">
+                <span class="rule-number">4</span>
+                <div class="rule-text">
+                  <strong>Loss Penalty:</strong> Fail to guess correctly or run out of time, and your deposit is permanently burned
+                </div>
+              </div>
+              <div class="rule-item">
+                <span class="rule-number">5</span>
+                <div class="rule-text">
+                  <strong>Streak System:</strong> Build consecutive wins to climb the leaderboard
+                </div>
+              </div>
+              <div class="rule-item">
+                <span class="rule-number">6</span>
+                <div class="rule-text">
+                  <strong>Difficulty:</strong> The game gets progressively harder by removing rows as your streak increases
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Creator Fee Rewards -->
+          <div class="rules-section">
+            <div class="section-title">💰 Creator Fee Rewards</div>
+            <div class="reward-info">
+              <div class="reward-highlight">
+                <h3>🏆 Top 3 Streaks share 70% of Creator Fees!</h3>
+                <p>At the end of each game period, the top three players with the highest streaks will split 70% of the accumulated creator fees. 30% will kept for team funds.</p>
+              </div>
+              <div class="reward-split">
+                <div class="split-item">
+                  <span class="position">1st Place</span>
+                  <span class="percentage">50%</span>
+                </div>
+                <div class="split-item">
+                  <span class="position">2nd Place</span>
+                  <span class="percentage">15%</span>
+                </div>
+                <div class="split-item">
+                  <span class="position">3rd Place</span>
+                  <span class="percentage">5%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Countdown Timer -->
+          <div class="rules-section">
+            <div class="section-title">⏰ Game Period Countdown</div>
+            <div class="game-countdown-container">
+              <div class="game-countdown" id="game-countdown">
+                <div class="countdown-item">
+                  <span class="countdown-value" id="days">0</span>
+                  <span class="countdown-label">Days</span>
+                </div>
+                <div class="countdown-item">
+                  <span class="countdown-value" id="hours">0</span>
+                  <span class="countdown-label">Hours</span>
+                </div>
+                <div class="countdown-item">
+                  <span class="countdown-value" id="minutes">0</span>
+                  <span class="countdown-label">Minutes</span>
+                </div>
+                <div class="countdown-item">
+                  <span class="countdown-value" id="seconds">0</span>
+                  <span class="countdown-label">Seconds</span>
+                </div>
+              </div>
+              <div class="countdown-message">Until the end of this game period, and the start of a new one</div>
+            </div>
           </div>
         </div>
       </div>
