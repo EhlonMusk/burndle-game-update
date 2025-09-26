@@ -23,6 +23,8 @@
     <script src="js/leaderboard.js"></script>
     <script src="js/burnmodal.js"></script>
     <script src="js/rules-modal.js"></script>
+    <script src="js/game-start-modal.js"></script>
+    <script src="js/game-countdown.js"></script>
 
     <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
     <link rel="stylesheet" href="css/styles.css" />
@@ -294,6 +296,38 @@
             </div>
           </div>
 
+        </div>
+      </div>
+    </div>
+
+    <!-- Start Game Countdown Modal -->
+    <div id="game-start-modal" class="game-start-modal">
+      <div class="game-start-content">
+        <div class="game-start-header">
+          <h2>🎮 Game Started!</h2>
+          <p class="countdown-intro">You have:</p>
+        </div>
+
+        <div class="game-countdown-container">
+          <div class="game-countdown" id="start-game-countdown">
+            <div class="countdown-item">
+              <span class="countdown-value" id="start-game-days">07</span>
+              <span class="countdown-label">Days</span>
+            </div>
+            <div class="countdown-item">
+              <span class="countdown-value" id="start-game-hours">00</span>
+              <span class="countdown-label">Hours</span>
+            </div>
+            <div class="countdown-item">
+              <span class="countdown-value" id="start-game-minutes">00</span>
+              <span class="countdown-label">Minutes</span>
+            </div>
+            <div class="countdown-item">
+              <span class="countdown-value" id="start-game-seconds">00</span>
+              <span class="countdown-label">Seconds</span>
+            </div>
+          </div>
+          <p class="countdown-message">to get the highest streak. Good luck!</p>
         </div>
       </div>
     </div>

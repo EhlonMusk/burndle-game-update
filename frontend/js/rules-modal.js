@@ -67,8 +67,13 @@ function openRulesModal() {
   // Apply theme
   applyThemeToRulesModal();
 
-  // Start countdown timer
-  startGameCountdown();
+  // Initialize the global countdown system (will resume if a game is running)
+  if (window.initializeGameCountdown) {
+    console.log("📋 Initializing global countdown system for rules modal");
+    window.initializeGameCountdown();
+  } else {
+    console.warn("⚠️ Global countdown system not available");
+  }
 }
 
 /**
@@ -80,10 +85,8 @@ function closeRulesModal() {
   rulesModal.classList.remove("show");
   document.body.style.overflow = "";
 
-  // Stop countdown
-  stopGameCountdown();
-
-  console.log("📋 Rules modal closed");
+  // Don't stop the global countdown - it should keep running for both modals
+  console.log("📋 Rules modal closed (keeping global countdown running)");
 }
 
 /**
@@ -106,13 +109,12 @@ function applyThemeToRulesModal() {
 }
 
 /**
- * Start the 7-day countdown timer (frozen at 7 days)
+ * Legacy function - now handled by global countdown system
+ * @deprecated Use the global countdown system from game-countdown.js
  */
-function startGameCountdown() {
-  // Clear any existing interval
-  stopGameCountdown();
-
-  // Set static 7-day countdown (frozen)
+function startGameCountdown_DEPRECATED() {
+  console.warn("⚠️ Using deprecated local startGameCountdown - should use global system");
+  // Set static 7-day countdown (frozen) - for backwards compatibility only
   document.getElementById("days").textContent = "07";
   document.getElementById("hours").textContent = "00";
   document.getElementById("minutes").textContent = "00";
@@ -120,9 +122,11 @@ function startGameCountdown() {
 }
 
 /**
- * Stop the countdown timer
+ * Legacy function - now handled by global countdown system
+ * @deprecated Use the global countdown system from game-countdown.js
  */
-function stopGameCountdown() {
+function stopGameCountdown_DEPRECATED() {
+  console.warn("⚠️ Using deprecated local stopGameCountdown - should use global system");
   if (countdownInterval) {
     clearInterval(countdownInterval);
     countdownInterval = null;

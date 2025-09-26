@@ -249,6 +249,30 @@ function connectPlayerWebSocket() {
       }
     });
 
+    // 🚀 ADD: Listen for game start events (same pattern as pause/resume)
+    window.playerSocket.on("game_started", (data) => {
+      console.log("🚀 Received game_started event:", data);
+
+      // Store game end time in localStorage for persistence
+      if (data.gameEndTimestamp) {
+        localStorage.setItem('gameEndTime', data.gameEndTimestamp.toString());
+        localStorage.setItem('gameStartedAt', data.startedAt);
+        console.log(`⏰ Game period stored: ${data.startedAt} → ${data.gameEndTime}`);
+      }
+
+      // Start the countdown timer for both modals
+      if (window.startGameCountdown && data.gameEndTimestamp) {
+        window.startGameCountdown(data.gameEndTimestamp);
+      }
+
+      // Show the start game modal
+      if (window.showStartGameModal) {
+        window.showStartGameModal();
+      } else {
+        console.warn("⚠️ showStartGameModal function not available");
+      }
+    });
+
     window.playerSocket.on("game_reset", (data) => {
       if (window.gamePauseHandler) {
         window.gamePauseHandler.handleGameReset(data);

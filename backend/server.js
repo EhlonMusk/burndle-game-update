@@ -153,6 +153,39 @@ io.on("connection", (socket) => {
       socket.emit("admin-should-refresh");
     }
   });
+
+  // Handle admin start game broadcast
+  socket.on("admin-start-game", (data) => {
+    console.log('📥 Received admin-start-game event from socket:', socket.id);
+    console.log('📊 Data received:', data);
+    console.log('👑 Is admin?', connectedAdmins.has(socket.id));
+    console.log('📈 Connected admins:', Array.from(connectedAdmins));
+
+    if (connectedAdmins.has(socket.id)) {
+      console.log('🚀 Admin triggered start game modal broadcast');
+
+      // Calculate 7 days from now
+      const startTime = new Date();
+      const endTime = new Date(startTime.getTime() + (7 * 24 * 60 * 60 * 1000)); // 7 days in milliseconds
+
+      // Broadcast to all connected clients (players) - same pattern as game_paused
+      const broadcastData = {
+        isStarted: true,
+        startedBy: 'admin',
+        startedAt: startTime.toISOString(),
+        gameEndTime: endTime.toISOString(),
+        gameEndTimestamp: endTime.getTime(),
+        message: 'Game Started! 🎮'
+      };
+
+      io.emit("game_started", broadcastData);
+      console.log('📡 Broadcasted game_started to all clients (same pattern as game_paused)');
+      console.log('📡 Broadcast data:', broadcastData);
+      console.log(`⏰ Game period: ${startTime.toISOString()} → ${endTime.toISOString()}`);
+    } else {
+      console.warn('⚠️ Non-admin tried to trigger start game modal');
+    }
+  });
 });
 
 // Global functions for broadcasting updates

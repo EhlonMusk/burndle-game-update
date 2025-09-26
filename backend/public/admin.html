@@ -1718,6 +1718,8 @@
         color: white;
         text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
       }
+
+
     </style>
   </head>
   <body>
@@ -2078,13 +2080,10 @@
           <h3>🎛️ Game Control Center</h3>
           <div class="control-grid">
             <div class="control-card">
-              <h4>📊 Data Management</h4>
+              <h4>🎮 Start Game</h4>
               <div class="control-buttons">
-                <button class="control-btn refresh" onclick="refreshAllData()">
-                  🔄 Refresh Data
-                </button>
-                <button class="control-btn info" onclick="getSystemStatus()">
-                  📋 System Status
+                <button class="control-btn success" onclick="startGameCountdown()" style="font-size: 18px; padding: 15px 25px;">
+                  🚀 Start Game
                 </button>
               </div>
             </div>
@@ -4279,6 +4278,42 @@
         }
       });
 
+      // Start Game function to broadcast modal to all connected clients
+      function startGameCountdown() {
+        console.log('🚀 Broadcasting start game modal to all clients...');
+        console.log('🔍 Socket connection status:', socket ? socket.connected : 'no socket');
+
+        try {
+          // Use existing socket connection to broadcast to all clients
+          if (socket && socket.connected) {
+            console.log('✅ Socket is connected, sending admin-start-game event');
+            // Send admin command to server to broadcast to all clients
+            socket.emit('admin-start-game', {
+              action: 'showStartGameModal',
+              timestamp: new Date().toISOString()
+            });
+            console.log('📤 Sent start game command to server for broadcast');
+
+            // Show confirmation to admin
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = '✅ Game Started!';
+            button.disabled = true;
+
+            setTimeout(() => {
+              button.textContent = originalText;
+              button.disabled = false;
+            }, 3000);
+          } else {
+            console.error('❌ No socket connection available');
+            alert('Not connected to server. Please refresh the page and try again.');
+          }
+        } catch (error) {
+          console.error('❌ Error broadcasting start game modal:', error);
+          alert('Error starting game. Please try again.');
+        }
+      }
+
     </script>
 
     <!-- Player Grid Modal -->
@@ -4298,6 +4333,7 @@
         </div>
       </div>
     </div>
+
 
   </body>
 </html>

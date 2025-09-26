@@ -2820,3 +2820,115 @@ html.switch @keyframes countdown-glow {
     font-size: 1.5rem;
   }
 }
+
+/* Game Start Modal Styles */
+.game-start-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 10003;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.game-start-modal.show {
+  display: flex;
+}
+
+.game-start-content {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  transform: scale(0.8);
+  animation: modalPopIn 0.5s ease-out forwards;
+}
+
+@keyframes modalPopIn {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes modalShrink {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+}
+
+.game-start-content.shrinking {
+  animation: modalShrink 0.5s ease-in forwards;
+}
+
+.game-start-header h2 {
+  margin: 0 0 1rem 0;
+  color: #4ecdc4;
+  font-size: 2rem;
+}
+
+.countdown-intro {
+  font-size: 1.2rem;
+  margin: 0 0 2rem 0;
+  color: #ccc;
+}
+
+.game-start-modal .game-countdown-container .game-countdown {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.game-start-modal .game-countdown-container .countdown-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  padding: 1rem;
+  min-width: 80px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.game-start-modal .game-countdown-container .countdown-value {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #4ecdc4;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.game-start-modal .game-countdown-container .countdown-label {
+  font-size: 0.9rem;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.game-start-modal .game-countdown-container .countdown-message {
+  font-size: 1.2rem;
+  color: #4ecdc4;
+  margin: 0;
+  font-weight: 500;
+}
