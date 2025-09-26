@@ -1003,26 +1003,18 @@ class GameTimer {
 
   // ✅ NEW: Apply visual styling to indicate submission blocking
   applyDangerStyling(isDanger) {
-    const enterKey = document.querySelector('.keyboard-row button[data-key="enter"]');
-    const board = document.getElementById("board");
+    // Use the unified keyboard visual state function
+    if (window.applyKeyboardVisualState) {
+      window.applyKeyboardVisualState();
+    }
 
-    if (isDanger) {
-      // Add danger classes
-      if (enterKey) {
-        enterKey.classList.add("submission-blocked");
-        enterKey.title = "⏰ Too close to reset! Wait for new word!";
-      }
-      if (board) {
-        board.classList.add("submission-danger");
-      }
-    } else {
-      // Remove danger classes
-      if (enterKey) {
-        enterKey.classList.remove("submission-blocked");
-        enterKey.removeAttribute("title");
-      }
-      if (board) {
-        board.classList.remove("submission-danger");
+    // Apply red/glowing styling to countdown timer
+    const countdownElement = document.querySelector('#countdown-timer');
+    if (countdownElement) {
+      if (isDanger) {
+        countdownElement.classList.add('countdown-danger');
+      } else {
+        countdownElement.classList.remove('countdown-danger');
       }
     }
   }

@@ -2466,3 +2466,49 @@ html.switch .submission-blocked {
   background-color: #ccc !important;
   color: #888 !important;
 }
+
+/* Disabled keyboard styling during final 3 seconds */
+#keyboard-container.keyboard-disabled {
+  opacity: 0.8;
+  transition: all 0.3s ease;
+}
+
+#keyboard-container.keyboard-disabled .key {
+  pointer-events: none !important;
+}
+
+#keyboard-container.keyboard-disabled .wide-button {
+  pointer-events: none !important;
+}
+
+/* Red and glowing countdown timer during final 3 seconds */
+#countdown-timer.countdown-danger {
+  color: #ff4444 !important;
+  text-shadow: 0 0 10px #ff4444, 0 0 20px #ff4444, 0 0 30px #ff4444 !important;
+  font-weight: bold !important;
+  animation: countdown-glow 1s ease-in-out infinite alternate !important;
+}
+
+@keyframes countdown-glow {
+  from {
+    text-shadow: 0 0 10px #ff4444, 0 0 20px #ff4444, 0 0 30px #ff4444;
+  }
+  to {
+    text-shadow: 0 0 15px #ff4444, 0 0 25px #ff4444, 0 0 35px #ff4444;
+  }
+}
+
+/* Light mode countdown danger styling */
+html.switch #countdown-timer.countdown-danger {
+  color: #cc0000 !important;
+  text-shadow: 0 0 10px #cc0000, 0 0 20px #cc0000, 0 0 30px #cc0000 !important;
+}
+
+html.switch @keyframes countdown-glow {
+  from {
+    text-shadow: 0 0 10px #cc0000, 0 0 20px #cc0000, 0 0 30px #cc0000;
+  }
+  to {
+    text-shadow: 0 0 15px #cc0000, 0 0 25px #cc0000, 0 0 35px #cc0000;
+  }
+}

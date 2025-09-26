@@ -266,5 +266,119 @@
     "signature": "2ijo4YE5XX5fxLibgdrB3nH5CHp44aMPeRANGM4xRXfMpPfxMmsWWiD4zNKsnszcKRs3vp7T8qB9HSM7JbazSzui",
     "timestamp": "2025-09-26T05:29:25.612Z",
     "explorerUrl": "https://explorer.solana.com/tx/2ijo4YE5XX5fxLibgdrB3nH5CHp44aMPeRANGM4xRXfMpPfxMmsWWiD4zNKsnszcKRs3vp7T8qB9HSM7JbazSzui?cluster=devnet"
+  },
+  {
+    "type": "BURN",
+    "amount": 100000,
+    "signature": "4oyFCFezbtUkVrDKAThGXxnsZsrJr7QWAV7f5QB8LJynEUhWDErneGpJLT6d47wUbexuyrzvL1fRT7bdnHVL2FWi",
+    "timestamp": "2025-09-26T05:31:02.869Z",
+    "explorerUrl": "https://explorer.solana.com/tx/4oyFCFezbtUkVrDKAThGXxnsZsrJr7QWAV7f5QB8LJynEUhWDErneGpJLT6d47wUbexuyrzvL1fRT7bdnHVL2FWi?cluster=devnet"
+  },
+  {
+    "type": "BURN",
+    "amount": 100000,
+    "signature": "3SguSFGZhgzXUzVQnyyd2xDCMVUJQsWCQA5Sgxr412boZ5QdSNKNdbDtNM2HRQXCYAEgpKyFDfanFsRdAYeYoBTv",
+    "timestamp": "2025-09-26T05:33:03.463Z",
+    "explorerUrl": "https://explorer.solana.com/tx/3SguSFGZhgzXUzVQnyyd2xDCMVUJQsWCQA5Sgxr412boZ5QdSNKNdbDtNM2HRQXCYAEgpKyFDfanFsRdAYeYoBTv?cluster=devnet"
+  },
+  {
+    "type": "RETURN",
+    "recipient": "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR",
+    "amount": 100000,
+    "signature": "2xC1Upro2Pr4Kn2LtcJ4e4yiDcHrGkBTbDdiBJpy4d4ZVWrWr2sgRuNB6P1hLhgGK97CzjnAUJpbrFkt4ZqZZ8aC",
+    "timestamp": "2025-09-26T05:33:31.338Z",
+    "explorerUrl": "https://explorer.solana.com/tx/2xC1Upro2Pr4Kn2LtcJ4e4yiDcHrGkBTbDdiBJpy4d4ZVWrWr2sgRuNB6P1hLhgGK97CzjnAUJpbrFkt4ZqZZ8aC?cluster=devnet"
+  },
+  {
+    "type": "BURN",
+    "amount": 100000,
+    "signature": "sfiZRLvbtWJdBPdMkg37tAVPDKMqV61z2eex4cWApAURABgHbKS19HVmGd94ZZKRpD5n4TAXgiyaEK8nxbLhJxw",
+    "timestamp": "2025-09-26T05:35:02.281Z",
+    "explorerUrl": "https://explorer.solana.com/tx/sfiZRLvbtWJdBPdMkg37tAVPDKMqV61z2eex4cWApAURABgHbKS19HVmGd94ZZKRpD5n4TAXgiyaEK8nxbLhJxw?cluster=devnet"
+  },
+  {
+    "type": "BURN",
+    "amount": 100000,
+    "signature": "2DpsWcy5sUjfh6no1AXC5WjWQY3b8koKhTm6do3zSw6T1x8b3yVeQdZVxs2zydFop9fjLdZf768fFte1H6Wq3aav",
+    "timestamp": "2025-09-26T05:36:02.297Z",
+    "explorerUrl": "https://explorer.solana.com/tx/2DpsWcy5sUjfh6no1AXC5WjWQY3b8koKhTm6do3zSw6T1x8b3yVeQdZVxs2zydFop9fjLdZf768fFte1H6Wq3aav?cluster=devnet"
+  },
+  {
+    "type": "BURN",
+    "amount": 100000,
+    "signature": "bwRQwCm6JMLkEDhKkc7Y165PakagTFUBP6DRk4C1mWPuoxiNNozfHMAFLpbXGRHd8giYKLqzQHRqMTCX9jU1j1o",
+    "timestamp": "2025-09-26T06:02:02.282Z",
+    "explorerUrl": "https://explorer.solana.com/tx/bwRQwCm6JMLkEDhKkc7Y165PakagTFUBP6DRk4C1mWPuoxiNNozfHMAFLpbXGRHd8giYKLqzQHRqMTCX9jU1j1o?cluster=devnet"
+  },
+  {
+    "type": "BURN",
+    "amount": 100000,
+    "signature": "ofBR1bKH9B5fzhh95gyWrVYD2AUqJmigXKoNZZxBv5dPuYV6fR63rLmFm8PrjXdFGqonCCen5HFQ5i9gnWUyCF5",
+    "timestamp": "2025-09-26T06:04:02.779Z",
+    "explorerUrl": "https://explorer.solana.com/tx/ofBR1bKH9B5fzhh95gyWrVYD2AUqJmigXKoNZZxBv5dPuYV6fR63rLmFm8PrjXdFGqonCCen5HFQ5i9gnWUyCF5?cluster=devnet"
+  },
+  {
+    "type": "BURN",
+    "amount": 100000,
+    "signature": "2jG3uqce6Pm6a4tHjiGBKfT6D4kY4Rk91hUoWVbAai8Nw23F7P3pb4tGGKyLTGNvyGtpigaoPfEkk2tAyW6GF3dN",
+    "timestamp": "2025-09-26T06:06:03.161Z",
+    "explorerUrl": "https://explorer.solana.com/tx/2jG3uqce6Pm6a4tHjiGBKfT6D4kY4Rk91hUoWVbAai8Nw23F7P3pb4tGGKyLTGNvyGtpigaoPfEkk2tAyW6GF3dN?cluster=devnet"
+  },
+  {
+    "type": "BURN",
+    "amount": 100000,
+    "signature": "4XxZ7pFN1YBtHB7NBNMWmMEBwNiYEDhPHPShfwmHrMkzkyrmJyjcm7qGmf2BEbebi68gBBn9DUhHLJpuJkYtYBc5",
+    "timestamp": "2025-09-26T06:08:02.439Z",
+    "explorerUrl": "https://explorer.solana.com/tx/4XxZ7pFN1YBtHB7NBNMWmMEBwNiYEDhPHPShfwmHrMkzkyrmJyjcm7qGmf2BEbebi68gBBn9DUhHLJpuJkYtYBc5?cluster=devnet"
+  },
+  {
+    "type": "BURN",
+    "amount": 100000,
+    "signature": "3MgRQRx3VXx2gEECo4rTquLsHarwCLg6Tvbzvgw6uCcJKJBpioQUYnvkZASrVtHNPeTMpBPt97qmL68P2oBdtM4H",
+    "timestamp": "2025-09-26T06:09:02.385Z",
+    "explorerUrl": "https://explorer.solana.com/tx/3MgRQRx3VXx2gEECo4rTquLsHarwCLg6Tvbzvgw6uCcJKJBpioQUYnvkZASrVtHNPeTMpBPt97qmL68P2oBdtM4H?cluster=devnet"
+  },
+  {
+    "type": "BURN",
+    "amount": 100000,
+    "signature": "2nBBUgRV5CLKDRRYb4f3VaW2w1vK5qhxXDKKJGopapvwz15PgVYR8mFCjrNEn5RfBDC5u4h3DB9QJZUPBZSKRkim",
+    "timestamp": "2025-09-26T06:12:04.289Z",
+    "explorerUrl": "https://explorer.solana.com/tx/2nBBUgRV5CLKDRRYb4f3VaW2w1vK5qhxXDKKJGopapvwz15PgVYR8mFCjrNEn5RfBDC5u4h3DB9QJZUPBZSKRkim?cluster=devnet"
+  },
+  {
+    "type": "BURN",
+    "amount": 100000,
+    "signature": "GXfTuRUNaxprYVGrUPGrHF46Tjm2juhTyauLS5a43bwYu9e53ekyrtGz4NWaovNyEvRPNbebScCZtKNMe8XP8qx",
+    "timestamp": "2025-09-26T06:14:02.527Z",
+    "explorerUrl": "https://explorer.solana.com/tx/GXfTuRUNaxprYVGrUPGrHF46Tjm2juhTyauLS5a43bwYu9e53ekyrtGz4NWaovNyEvRPNbebScCZtKNMe8XP8qx?cluster=devnet"
+  },
+  {
+    "type": "BURN",
+    "amount": 100000,
+    "signature": "LTpLUmLrLz65BAex3UqS9owD72aduNmkZZMYgYphR7SEpWJP95eXbsQKs7CD3oW2uoEwZjw5r4WEeDRF7AFv4ni",
+    "timestamp": "2025-09-26T06:16:03.215Z",
+    "explorerUrl": "https://explorer.solana.com/tx/LTpLUmLrLz65BAex3UqS9owD72aduNmkZZMYgYphR7SEpWJP95eXbsQKs7CD3oW2uoEwZjw5r4WEeDRF7AFv4ni?cluster=devnet"
+  },
+  {
+    "type": "RETURN",
+    "recipient": "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR",
+    "amount": 100000,
+    "signature": "94kB8uT3akoyHxY5AUaipsHWZT13KtaNeURaT2zzFoeSJfEJohkRoWmfLM7MvJEd1Mv3UKk7KhRfRNw99T6mG3E",
+    "timestamp": "2025-09-26T06:20:38.354Z",
+    "explorerUrl": "https://explorer.solana.com/tx/94kB8uT3akoyHxY5AUaipsHWZT13KtaNeURaT2zzFoeSJfEJohkRoWmfLM7MvJEd1Mv3UKk7KhRfRNw99T6mG3E?cluster=devnet"
+  },
+  {
+    "type": "BURN",
+    "amount": 100000,
+    "signature": "5bhXiTYYLtYjaPhm3JeMFL8PtnH6ms4KxNS5QDzBrDdoXmgtTeB268UwTxq5ZYbYWteiBTkBTs3iFozFXwnZWG8o",
+    "timestamp": "2025-09-26T06:21:24.655Z",
+    "explorerUrl": "https://explorer.solana.com/tx/5bhXiTYYLtYjaPhm3JeMFL8PtnH6ms4KxNS5QDzBrDdoXmgtTeB268UwTxq5ZYbYWteiBTkBTs3iFozFXwnZWG8o?cluster=devnet"
+  },
+  {
+    "type": "BURN",
+    "amount": 100000,
+    "signature": "2X8NtXK9x9a7GatxNF7FSxJiDeAsc6W1ur1q6NQSK1dBnhrTyVf6Pk4SZvGRmNzSuSFXKQv2nZpxU6DsSUMo8ptg",
+    "timestamp": "2025-09-26T06:23:02.443Z",
+    "explorerUrl": "https://explorer.solana.com/tx/2X8NtXK9x9a7GatxNF7FSxJiDeAsc6W1ur1q6NQSK1dBnhrTyVf6Pk4SZvGRmNzSuSFXKQv2nZpxU6DsSUMo8ptg?cluster=devnet"
   }
 ]

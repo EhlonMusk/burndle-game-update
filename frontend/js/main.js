@@ -25,11 +25,23 @@ document.addEventListener("DOMContentLoaded", () => {
   window.enableGame = () => {
     gameEnabled = true;
     window.gameEnabled = true;
+    // Update keyboard visual state
+    setTimeout(() => {
+      if (window.applyKeyboardVisualState) {
+        window.applyKeyboardVisualState();
+      }
+    }, 100);
   };
 
   window.disableGame = () => {
     gameEnabled = false;
     window.gameEnabled = false;
+    // Update keyboard visual state
+    setTimeout(() => {
+      if (window.applyKeyboardVisualState) {
+        window.applyKeyboardVisualState();
+      }
+    }, 100);
   };
 
   window.setPeriodTransition = function (state) {
@@ -40,6 +52,12 @@ document.addEventListener("DOMContentLoaded", () => {
       gameEnabled = false;
       window.gameEnabled = false;
     }
+    // Update keyboard visual state
+    setTimeout(() => {
+      if (window.applyKeyboardVisualState) {
+        window.applyKeyboardVisualState();
+      }
+    }, 100);
   };
 
   // ✅ COMPLETELY REWRITTEN: Reset game state with proper cleanup
@@ -766,12 +784,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ✅ UPDATED: Submit word with better error handling
   async function handleSubmitWord() {
-    // ✅ NEW: Check if we're in the final 3 seconds before period reset
-    if (window.isInSubmissionDangerWindow && window.isInSubmissionDangerWindow()) {
-      showToast("⏰ Too close to reset! Wait for new word!", "warning", 3000);
-      console.log("🚫 Submit blocked - too close to period reset (≤3 seconds)");
-      return;
-    }
+    // 3-second check is now handled in handleKeyInput() for all keyboard input
 
     // Check wallet connection and game state
     if (!window.isWalletConnected || !window.isWalletConnected()) {
@@ -1148,6 +1161,13 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    // Check if we're in the final 3 seconds before period reset (blocks all keyboard input)
+    if (window.isInSubmissionDangerWindow && window.isInSubmissionDangerWindow()) {
+      showToast("⏰ Too close to reset! Wait for new word!", "warning", 3000);
+      console.log("🚫 All keyboard input blocked - too close to period reset (≤3 seconds)");
+      return;
+    }
+
     if (key === "enter") handleSubmitWord();
     else if (key === "del" || key === "backspace") deleteLetter();
     else if (key.match(/^[a-z]$/)) updateGuessedWords(key);
@@ -1222,6 +1242,23 @@ document.addEventListener("DOMContentLoaded", () => {
     else if (key.match(/^[a-z]$/)) handleKeyInput(key);
   });
 
+  // ✅ NEW: Apply visual keyboard disabled styling
+  function applyKeyboardVisualState() {
+    const keyboard = document.querySelector('#keyboard-container');
+    const shouldAccept = shouldAcceptGameInput();
+    const inDangerWindow = window.isInSubmissionDangerWindow && window.isInSubmissionDangerWindow();
+
+    if (keyboard) {
+      if (!shouldAccept || inDangerWindow) {
+        keyboard.classList.add("keyboard-disabled");
+        console.log("🚫 Applied keyboard-disabled styling (general or danger window)");
+      } else {
+        keyboard.classList.remove("keyboard-disabled");
+        console.log("✅ Removed keyboard-disabled styling");
+      }
+    }
+  }
+
   function shouldAcceptGameInput() {
     // Check if user is typing in an input field
     const activeElement = document.activeElement;
@@ -1254,8 +1291,16 @@ document.addEventListener("DOMContentLoaded", () => {
     return gameReady && !isTypingInInput && !isModalOpen && !isGamePaused;
   }
 
+  // ✅ PERIODIC KEYBOARD STATE UPDATE
+  setInterval(() => {
+    if (window.applyKeyboardVisualState) {
+      window.applyKeyboardVisualState();
+    }
+  }, 1000); // Check every second
+
   // ✅ MAKE FUNCTIONS GLOBALLY AVAILABLE
   window.startNewGame = startNewGame;
+  window.applyKeyboardVisualState = applyKeyboardVisualState;
   window.loadExistingGame = loadExistingGame;
   window.restoreGameState = restoreGameState;
   window.clearGameBoard = clearGameBoard;
