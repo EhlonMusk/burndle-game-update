@@ -106,23 +106,17 @@ function applyThemeToRulesModal() {
 }
 
 /**
- * Start the 3-day countdown timer
+ * Start the 7-day countdown timer (frozen at 7 days)
  */
 function startGameCountdown() {
-  // Set target date to 7 days from now
-  const targetDate = new Date();
-  targetDate.setDate(targetDate.getDate() + 7);
-
   // Clear any existing interval
   stopGameCountdown();
 
-  // Update countdown immediately
-  updateCountdown(targetDate);
-
-  // Update every second
-  countdownInterval = setInterval(() => {
-    updateCountdown(targetDate);
-  }, 1000);
+  // Set static 7-day countdown (frozen)
+  document.getElementById("days").textContent = "07";
+  document.getElementById("hours").textContent = "00";
+  document.getElementById("minutes").textContent = "00";
+  document.getElementById("seconds").textContent = "00";
 }
 
 /**

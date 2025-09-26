@@ -775,14 +775,14 @@ footer {
   display: none;
   justify-content: center;
   align-items: center;
-  z-index: 2000;
+  z-index: 10002;
   animation: fadeIn 0.3s ease-out;
   backdrop-filter: blur(5px);
 }
 
 .leaderboard-modal.show {
   display: flex;
-  z-index: 2000;
+  z-index: 10002;
 }
 
 .leaderboard-modal.show ~ * {
@@ -1988,7 +1988,7 @@ footer {
   display: none;
   justify-content: center;
   align-items: center;
-  z-index: 3000;
+  z-index: 10002;
   animation: fadeIn 0.3s ease-out;
   backdrop-filter: blur(5px);
 }
@@ -2525,7 +2525,7 @@ html.switch @keyframes countdown-glow {
   display: none;
   justify-content: center;
   align-items: center;
-  z-index: 3000;
+  z-index: 10002;
   padding: 20px;
   box-sizing: border-box;
 }
