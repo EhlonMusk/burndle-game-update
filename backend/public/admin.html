@@ -2551,11 +2551,19 @@
 
             document.getElementById("statsSection").innerHTML = statsHtml;
 
-            // Add the Game Period Countdown box separately after the stats section
+            // Add the Game Period Countdown box separately after the stats section (only if it doesn't exist)
             const statsSection = document.getElementById("statsSection");
-            const gamePeriodContainer = document.createElement('div');
-            gamePeriodContainer.innerHTML = gamePeriodHtml;
-            statsSection.parentNode.insertBefore(gamePeriodContainer, statsSection.nextSibling);
+
+            // Check if game period countdown already exists to prevent duplicates
+            const existingGamePeriod = document.querySelector('.game-period-countdown-box');
+            if (!existingGamePeriod) {
+              const gamePeriodContainer = document.createElement('div');
+              gamePeriodContainer.innerHTML = gamePeriodHtml;
+              statsSection.parentNode.insertBefore(gamePeriodContainer, statsSection.nextSibling);
+              console.log("🎮 Created new game period countdown box");
+            } else {
+              console.log("🎮 Game period countdown box already exists, skipping creation");
+            }
 
             // Start the countdown timer after stats are loaded
             initializeAdminCountdown();
