@@ -136,6 +136,63 @@ router.post("/game-complete", async (req, res) => {
     // Clean up the completed game from active games
     storage.deleteGame(gameId);
 
+    // ✅ NEW: Process treasury transaction (burn or return tokens) - ASYNC, NON-BLOCKING
+    setImmediate(async () => {
+      try {
+        const treasury = require("../treasury");
+        const depositAmount = 100000; // Updated deposit amount
+
+        if (isWin) {
+          console.log(`🎉 Processing token return for winner: ${walletAddress.slice(0, 8)}...`);
+          const returnResult = await treasury.returnTokensToWinner(walletAddress, depositAmount);
+
+          if (returnResult.success) {
+            console.log(`✅ Successfully returned ${depositAmount.toLocaleString()} BURN to winner`);
+
+            // Notify frontend that tokens were returned
+            console.log(`📡 Attempting to emit tokenReturned WebSocket event...`);
+            if (global.io) {
+              console.log(`📡 Emitting tokenReturned for ${walletAddress.slice(0, 8)}... (${depositAmount.toLocaleString()} BURN)`);
+              global.io.emit('tokenReturned', {
+                walletAddress: walletAddress,
+                amount: depositAmount
+              });
+              console.log(`✅ WebSocket tokenReturned event emitted successfully`);
+            } else {
+              console.error(`❌ global.io is not available - cannot emit WebSocket event`);
+            }
+          } else {
+            console.error(`❌ Failed to return tokens to winner: ${returnResult.error}`);
+          }
+        } else {
+          console.log(`🔥 Processing token burn for game loss`);
+          const burnResult = await treasury.burnTokens(depositAmount);
+
+          if (burnResult.success) {
+            console.log(`✅ Successfully burned ${depositAmount.toLocaleString()} BURN tokens`);
+
+            // Notify frontend that tokens were burned
+            console.log(`📡 Attempting to emit tokenBurned WebSocket event...`);
+            if (global.io) {
+              console.log(`📡 Emitting tokenBurned for ${walletAddress.slice(0, 8)}... (${depositAmount.toLocaleString()} BURN)`);
+              global.io.emit('tokenBurned', {
+                walletAddress: walletAddress,
+                amount: depositAmount
+              });
+              console.log(`✅ WebSocket tokenBurned event emitted successfully`);
+            } else {
+              console.error(`❌ global.io is not available - cannot emit WebSocket event`);
+            }
+          } else {
+            console.error(`❌ Failed to burn tokens: ${burnResult.error}`);
+          }
+        }
+      } catch (error) {
+        console.error("❌ Error processing treasury transaction:", error);
+        // Don't fail the game completion if treasury fails - log and continue
+      }
+    });
+
     // ✅ WEBSOCKET: Broadcast leaderboard update to all
     if (global.broadcastToAll) {
       const leaderboard = storage
@@ -238,6 +295,7 @@ router.post("/handle-incomplete-game", async (req, res) => {
         });
         console.log("📡 Broadcasted incomplete game streak reset to admins");
       }
+
 
       console.log(
         `⏰ Incomplete game handled for ${walletAddress.slice(

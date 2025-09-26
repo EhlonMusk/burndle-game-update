@@ -152,6 +152,7 @@ class DisconnectedPlayerManager {
           game.abandonReason = "disconnected_timeout";
           storage.saveGame(game);
 
+
           incompleteGamePlayers.push({
             walletAddress,
             gameId: incompleteGameCheck.gameId,
@@ -336,6 +337,7 @@ class DisconnectedPlayerManager {
         game.abandonedAt = Date.now();
         game.abandonReason = reason;
         storage.saveGame(game);
+
       }
 
       // Reset the streak (only if they didn't win this period)

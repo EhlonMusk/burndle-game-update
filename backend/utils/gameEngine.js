@@ -538,7 +538,7 @@ class GameEngine {
       streakData.lastPlayedDate = today;
 
       // Save the updated streak data
-      storage.setStreakData(walletAddress, streakData);
+      storage.saveStreakData(walletAddress, streakData);
 
       // ✅ WEBSOCKET: Broadcast streak reset to admins
       if (global.broadcastToAdmins) {

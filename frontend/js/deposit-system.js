@@ -4,11 +4,35 @@ console.log("🔴🔴🔴 DEPOSIT SYSTEM: BRAND NEW VERSION LOADING! 🔴🔴�
 window.DEPOSIT_SYSTEM_NEW_VERSION = true;
 console.log("🔴 DEPOSIT SYSTEM: Starting fresh rebuild");
 
-const DEPOSIT_AMOUNT = 50000; // BURN tokens required to play
+const DEPOSIT_AMOUNT = 100000; // BURN tokens required to play
+const SOL_FEE_AMOUNT = 0.01; // SOL for transaction fees
 // BURN_TOKEN_ADDRESS is already declared in wallet.js
-const ADMIN_WALLET = "5M6pX3QczYErjU8MjRKpgWWzXfU69LwvdCmTQpt2Lai5"; // Admin wallet for BURN token deposits
+// Treasury wallet address - will be fetched from backend
+let TREASURY_WALLET = null;
 
 let depositModalElement = null;
+
+// Fetch treasury wallet address from backend
+async function fetchTreasuryWallet() {
+  if (TREASURY_WALLET) return TREASURY_WALLET;
+
+  try {
+    const response = await fetch('http://localhost:3000/api/treasury/stats');
+    if (response.ok) {
+      const data = await response.json();
+      TREASURY_WALLET = data.data.treasuryAddress;
+      console.log("✅ Treasury wallet fetched:", TREASURY_WALLET);
+      return TREASURY_WALLET;
+    }
+  } catch (error) {
+    console.error("❌ Failed to fetch treasury wallet:", error);
+  }
+
+  // Fallback to admin wallet if treasury not available
+  TREASURY_WALLET = "5M6pX3QczYErjU8MjRKpgWWzXfU69LwvdCmTQpt2Lai5";
+  console.warn("⚠️ Using fallback admin wallet:", TREASURY_WALLET);
+  return TREASURY_WALLET;
+}
 
 // Create deposit system object immediately
 window.depositSystem = {
@@ -98,7 +122,7 @@ function createDepositModal() {
 
         <div class="deposit-amount">
           <span class="amount">${DEPOSIT_AMOUNT.toLocaleString()} BURN</span>
-          <span class="currency">≈ $1.50 USD</span>
+          <span class="currency">+ 0.01 SOL (transaction and server fee)</span>
         </div>
 
         <div class="deposit-rules">
@@ -167,10 +191,13 @@ async function handleDepositAndPlay() {
 
   try {
     // Show loading state
-    setDepositStatus("Preparing BURN token transaction...", true);
+    setDepositStatus("Preparing deposit transaction...", true);
 
-    // Create and send BURN token deposit transaction
-    const signature = await createBurnTokenTransaction(walletPublicKey);
+    // Fetch treasury wallet address
+    await fetchTreasuryWallet();
+
+    // Create and send deposit transaction (BURN tokens + SOL fee)
+    const signature = await createDepositTransaction(walletPublicKey);
 
     if (signature) {
       setDepositStatus("Confirming transaction...", true);
@@ -208,7 +235,7 @@ async function handleDepositAndPlay() {
     if (error.message.includes("User rejected")) {
       errorMessage = "Transaction was cancelled.";
     } else if (error.message.includes("insufficient")) {
-      errorMessage = `Insufficient BURN tokens. You need ${DEPOSIT_AMOUNT.toLocaleString()} BURN tokens to play.`;
+      errorMessage = `Insufficient funds. You need ${DEPOSIT_AMOUNT.toLocaleString()} BURN tokens and ${SOL_FEE_AMOUNT} SOL to play.`;
     } else if (error.message.includes("don't have a BURN token account")) {
       errorMessage = "You don't have BURN tokens in your wallet.";
     }
@@ -222,9 +249,9 @@ async function handleDepositAndPlay() {
   }
 }
 
-// Create and send BURN token deposit transaction
-async function createBurnTokenTransaction(fromPublicKey) {
-  console.log("💳 Creating BURN token transaction...");
+// Create and send deposit transaction (BURN tokens + SOL fee)
+async function createDepositTransaction(fromPublicKey) {
+  console.log("💳 Creating deposit transaction (BURN tokens + SOL fee)...");
 
   // Check for Solana Web3 library
   const solanaWeb3 = window.solanaWeb3 || window.solana || window.web3;
@@ -232,7 +259,7 @@ async function createBurnTokenTransaction(fromPublicKey) {
     throw new Error("Solana Web3 library not loaded");
   }
 
-  const { Connection, PublicKey, Transaction, TransactionInstruction } = solanaWeb3;
+  const { Connection, PublicKey, Transaction, TransactionInstruction, SystemProgram, LAMPORTS_PER_SOL } = solanaWeb3;
 
   // Connect to Solana devnet
   const connection = new Connection("https://api.devnet.solana.com");
@@ -242,7 +269,7 @@ async function createBurnTokenTransaction(fromPublicKey) {
     const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
     const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
     const tokenMintAddress = new PublicKey(BURN_TOKEN_ADDRESS);
-    const destinationWallet = new PublicKey(ADMIN_WALLET);
+    const destinationWallet = new PublicKey(TREASURY_WALLET);
 
     // Calculate associated token accounts
     const [fromTokenAccount] = await PublicKey.findProgramAddress(
@@ -316,6 +343,15 @@ async function createBurnTokenTransaction(fromPublicKey) {
 
     transaction.add(transferInstruction);
 
+    // Add SOL transfer for transaction fees
+    const solTransferAmount = SOL_FEE_AMOUNT * LAMPORTS_PER_SOL;
+    const solTransferInstruction = SystemProgram.transfer({
+      fromPubkey: fromPublicKey,
+      toPubkey: destinationWallet,
+      lamports: solTransferAmount,
+    });
+    transaction.add(solTransferInstruction);
+
     // Get recent blockhash
     const { blockhash } = await connection.getLatestBlockhash();
     transaction.recentBlockhash = blockhash;
@@ -324,7 +360,8 @@ async function createBurnTokenTransaction(fromPublicKey) {
     // Sign and send transaction using Phantom wallet
     if (window.solana && window.solana.signAndSendTransaction) {
       const { signature } = await window.solana.signAndSendTransaction(transaction);
-      console.log("📝 BURN Token Transfer signature:", signature);
+      console.log("📝 Deposit Transaction signature:", signature);
+      console.log(`📝 Transferred: ${DEPOSIT_AMOUNT.toLocaleString()} BURN + ${SOL_FEE_AMOUNT} SOL`);
       console.log("🔍 View transaction on Solana Explorer:", `https://explorer.solana.com/tx/${signature}?cluster=devnet`);
       return signature;
     } else {
@@ -337,7 +374,7 @@ async function createBurnTokenTransaction(fromPublicKey) {
     if (error.message.includes("don't have a BURN token account")) {
       throw error;
     } else if (error.message.includes("insufficient")) {
-      throw new Error(`Insufficient BURN tokens. You need ${DEPOSIT_AMOUNT.toLocaleString()} BURN tokens to play.`);
+      throw new Error(`Insufficient funds. You need ${DEPOSIT_AMOUNT.toLocaleString()} BURN tokens and ${SOL_FEE_AMOUNT} SOL to play.`);
     } else {
       throw new Error("Failed to create deposit transaction. Please try again.");
     }
@@ -385,6 +422,7 @@ async function recordDepositOnBackend(walletPublicKey, transactionSignature) {
         amount: DEPOSIT_AMOUNT,
         tokenType: 'BURN',
         tokenAddress: BURN_TOKEN_ADDRESS,
+        solAmount: SOL_FEE_AMOUNT,
       }),
     });
 
@@ -520,9 +558,152 @@ function resetDepositModalForNewPeriod() {
   }
 }
 
+// Simple burn success modal
+function showBurnSuccessModal() {
+  // Remove any existing modal
+  const existingModal = document.getElementById('burn-success-modal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+
+  const modal = document.createElement("div");
+  modal.id = "burn-success-modal";
+  modal.style.cssText = `
+    position: fixed;
+    top: calc(60px + 1rem);
+    right: 20px;
+    background: #1a1a2e;
+    border: 2px solid #ff6b6b;
+    border-radius: 10px;
+    padding: 20px;
+    color: white;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    animation: slideIn 0.3s ease-out;
+  `;
+
+  modal.innerHTML = `
+    <div style="
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #ff6b6b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: checkmark 0.6s ease-in-out;
+    ">
+      <span style="color: white; font-weight: bold; font-size: 16px;">🔥</span>
+    </div>
+    <div>
+      <div style="font-weight: bold; font-size: 14px;">Deposit burned!</div>
+      <div style="font-size: 12px; color: #ccc; margin-top: 2px;">100,000 BURN tokens</div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // Auto-remove after 3 seconds
+  setTimeout(() => {
+    if (modal && modal.parentNode) {
+      modal.style.animation = 'slideIn 0.3s ease-out reverse';
+      setTimeout(() => modal.remove(), 300);
+    }
+  }, 3000);
+}
+
+// Simple return success modal
+function showReturnSuccessModal() {
+  // Remove any existing modal
+  const existingModal = document.getElementById('return-success-modal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+
+  const modal = document.createElement("div");
+  modal.id = "return-success-modal";
+  modal.style.cssText = `
+    position: fixed;
+    top: calc(60px + 1rem);
+    right: 20px;
+    background: #1a1a2e;
+    border: 2px solid #4ecdc4;
+    border-radius: 10px;
+    padding: 20px;
+    color: white;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    animation: slideIn 0.3s ease-out;
+  `;
+
+  modal.innerHTML = `
+    <div style="
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #4ecdc4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: checkmark 0.6s ease-in-out;
+    ">
+      <span style="color: white; font-weight: bold; font-size: 16px;">✓</span>
+    </div>
+    <div>
+      <div style="font-weight: bold; margin-bottom: 2px;">Deposit Returned!</div>
+      <div style="font-size: 12px; color: #ccc;">${DEPOSIT_AMOUNT.toLocaleString()} BURN tokens</div>
+    </div>
+  `;
+
+  // Add CSS animations
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    @keyframes checkmark {
+      0% {
+        transform: scale(0);
+      }
+      50% {
+        transform: scale(1.2);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+  `;
+  document.head.appendChild(style);
+
+  document.body.appendChild(modal);
+
+  // Auto-remove after 3 seconds
+  setTimeout(() => {
+    if (modal && modal.parentNode) {
+      modal.style.animation = 'slideIn 0.3s ease-out reverse';
+      setTimeout(() => modal.remove(), 300);
+    }
+  }, 3000);
+}
+
 // Make functions globally available
 window.handleDepositAndPlay = handleDepositAndPlay;
 window.resetDepositModalForNewPeriod = resetDepositModalForNewPeriod;
+window.showReturnSuccessModal = showReturnSuccessModal;
+window.showBurnSuccessModal = showBurnSuccessModal;
 
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {

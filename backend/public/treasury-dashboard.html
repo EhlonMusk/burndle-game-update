@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BURNdle Treasury Dashboard</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #16213e;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #0f3460;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .transactions {
+            background: #16213e;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #0f3460;
+        }
+
+        .transaction {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin: 10px 0;
+            background: #0f3460;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .transaction.burn {
+            border-left-color: #ff6b6b;
+        }
+
+        .transaction.return {
+            border-left-color: #4ecdc4;
+        }
+
+        .transaction.failed {
+            border-left-color: #ffa726;
+            opacity: 0.7;
+        }
+
+        .tx-type {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+
+        .tx-burn { color: #ff6b6b; }
+        .tx-return { color: #4ecdc4; }
+        .tx-failed { color: #ffa726; }
+
+        .tx-details {
+            flex-grow: 1;
+            margin-left: 15px;
+        }
+
+        .tx-amount {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .tx-time {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .explorer-link {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .explorer-link:hover {
+            text-decoration: underline;
+        }
+
+        .loading {
+            text-align: center;
+            color: #888;
+            padding: 20px;
+        }
+
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .refresh-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .treasury-address {
+            font-family: monospace;
+            font-size: 12px;
+            background: #0f3460;
+            padding: 5px 8px;
+            border-radius: 4px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏦 BURNdle Treasury Dashboard</h1>
+        <p>Automated token burns and returns with full transparency</p>
+        <button class="refresh-btn" onclick="loadDashboard()">🔄 Refresh Data</button>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Treasury Address</div>
+            <div class="stat-value" id="treasury-address">Loading...</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Total Transactions</div>
+            <div class="stat-value" id="total-transactions">-</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Total Burned</div>
+            <div class="stat-value" id="total-burned">- BURN</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Total Returned</div>
+            <div class="stat-value" id="total-returned">- BURN</div>
+        </div>
+    </div>
+
+    <div class="transactions">
+        <h2>Recent Transactions</h2>
+        <div id="transactions-list" class="loading">
+            Loading transactions...
+        </div>
+    </div>
+
+    <script>
+        async function loadDashboard() {
+            try {
+                // Load treasury stats
+                const statsResponse = await fetch('/api/treasury/stats');
+                const statsData = await statsResponse.json();
+
+                if (statsData.success) {
+                    const stats = statsData.data;
+
+                    // Update treasury address with link
+                    document.getElementById('treasury-address').innerHTML =
+                        `<span class="treasury-address">${stats.treasuryAddress?.slice(0, 8)}...${stats.treasuryAddress?.slice(-8)}</span>` +
+                        `<br><a href="https://explorer.solana.com/address/${stats.treasuryAddress}?cluster=devnet" target="_blank" class="explorer-link">View on Solana Explorer</a>`;
+
+                    document.getElementById('total-transactions').textContent = stats.totalTransactions || 0;
+                    document.getElementById('total-burned').textContent = `${(stats.totalBurned || 0).toLocaleString()} BURN`;
+                    document.getElementById('total-returned').textContent = `${(stats.totalReturned || 0).toLocaleString()} BURN`;
+                }
+
+                // Load recent transactions
+                const txResponse = await fetch('/api/treasury/transactions?limit=50');
+                const txData = await txResponse.json();
+
+                if (txData.success) {
+                    displayTransactions(txData.data);
+                }
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                document.getElementById('transactions-list').innerHTML =
+                    '<div style="color: #ff6b6b;">Error loading dashboard data. Make sure the backend is running.</div>';
+            }
+        }
+
+        function displayTransactions(transactions) {
+            const container = document.getElementById('transactions-list');
+
+            if (!transactions || transactions.length === 0) {
+                container.innerHTML = '<div class="loading">No transactions yet</div>';
+                return;
+            }
+
+            container.innerHTML = transactions.map(tx => {
+                const date = new Date(tx.timestamp).toLocaleString();
+                const typeClass = tx.type.toLowerCase().replace('_failed', '');
+                const isFailed = tx.error;
+
+                let content = `
+                    <div class="transaction ${typeClass} ${isFailed ? 'failed' : ''}">
+                        <div class="tx-type tx-${typeClass}">${tx.type}</div>
+                        <div class="tx-details">
+                            <div class="tx-amount">${(tx.amount || 0).toLocaleString()} BURN</div>
+                            <div class="tx-time">${date}</div>
+                            ${tx.recipient ? `<div style="font-size: 12px; color: #888;">→ ${tx.recipient.slice(0, 8)}...${tx.recipient.slice(-8)}</div>` : ''}
+                            ${tx.error ? `<div style="color: #ffa726; font-size: 12px;">Error: ${tx.error}</div>` : ''}
+                        </div>`;
+
+                if (tx.explorerUrl) {
+                    content += `<a href="${tx.explorerUrl}" target="_blank" class="explorer-link">View TX</a>`;
+                }
+
+                content += '</div>';
+                return content;
+            }).join('');
+        }
+
+        // Load dashboard on page load
+        loadDashboard();
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadDashboard, 30000);
+    </script>
+</body>
+</html>

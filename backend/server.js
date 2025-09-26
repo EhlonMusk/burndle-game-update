@@ -16,6 +16,9 @@ const io = socketIo(server, {
   },
 });
 
+// ✅ Make io available globally for treasury system
+global.io = io;
+
 // 🚨 ADD THIS RIGHT AFTER your existing io setup:
 const adminRoutes = require("./routes/admin");
 if (adminRoutes.setSocketIO) {
@@ -38,6 +41,18 @@ const gameRoutes = require("./routes/game");
 const streaksRoutes = require("./routes/streaks");
 const burnRoutes = require("./routes/burn"); // ✅ NEW: Import burn routes
 
+// ✅ NEW: Import treasury system
+const treasury = require("./treasury");
+
+// Initialize treasury system
+treasury.initializeTreasury().then((success) => {
+  if (success) {
+    console.log("✅ Automated treasury system initialized");
+  } else {
+    console.error("❌ Failed to initialize treasury system");
+  }
+});
+
 // Make io available to routes
 app.set("io", io);
 
@@ -46,6 +61,38 @@ app.use("/api", gameRoutes);
 app.use("/api", streaksRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/burn", burnRoutes); // ✅ NEW: Add burn routes
+
+// ✅ NEW: Treasury transparency routes
+app.get("/api/treasury/stats", async (req, res) => {
+  try {
+    const stats = await treasury.getTreasuryStats();
+    res.json({ success: true, data: stats });
+  } catch (error) {
+    console.error("❌ Error getting treasury stats:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get("/api/treasury/transactions", async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 100;
+    const transactions = treasury.getTransactionLog(limit);
+    res.json({ success: true, data: transactions });
+  } catch (error) {
+    console.error("❌ Error getting treasury transactions:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get("/api/treasury/balances", async (req, res) => {
+  try {
+    await treasury.checkTreasuryBalances();
+    res.json({ success: true, message: "Balances checked - see server console" });
+  } catch (error) {
+    console.error("❌ Error checking treasury balances:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 // WebSocket Connection Management
 const connectedAdmins = new Set();
@@ -671,6 +718,7 @@ global.handlePeriodTransition = async () => {
             });
           }
         }
+
 
         incompleteGamesProcessed++;
       }

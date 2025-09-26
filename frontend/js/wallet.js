@@ -231,10 +231,7 @@ function connectPlayerWebSocket() {
         }
       }
 
-      // Show toast notification
-      if (window.showToast) {
-        window.showToast("New period started! All players must deposit again.", "info", 5000);
-      }
+      // Toast notification removed per user request
 
       console.log("✅ Period transition handled on frontend");
     });
@@ -432,6 +429,57 @@ function connectPlayerWebSocket() {
         }
       }
     });
+
+    // ✅ NEW: Listen for token return notifications
+    window.playerSocket.on("tokenReturned", (data) => {
+      console.log("🎉 Received tokenReturned event:", data);
+
+      // Check if this return is for the current player
+      if (window.isWalletConnected && window.isWalletConnected()) {
+        const currentWallet = window.getWalletPublicKey();
+        if (currentWallet && currentWallet.toString() === data.walletAddress) {
+          console.log("✅ Tokens returned for current player, showing success modal");
+
+          // Show the return success modal
+          if (window.showReturnSuccessModal) {
+            window.showReturnSuccessModal();
+          }
+
+          // Refresh BURN token balance after successful return
+          if (window.updateSOLBalance) {
+            console.log("🔄 Refreshing BURN token balance after return");
+            setTimeout(() => {
+              window.updateSOLBalance();
+            }, 1000); // 1 second delay to allow blockchain to update
+          }
+        }
+      }
+    });
+
+    // ✅ NEW: Listen for token burn notifications
+    window.playerSocket.on("tokenBurned", (data) => {
+      console.log("🔥 Received tokenBurned event:", data);
+      // Check if this burn is for the current player
+      if (window.isWalletConnected && window.isWalletConnected()) {
+        const currentWallet = window.getWalletPublicKey();
+        if (currentWallet && currentWallet.toString() === data.walletAddress) {
+          console.log("✅ Tokens burned for current player, showing burn modal");
+          // Show the burn success modal
+          if (window.showBurnSuccessModal) {
+            window.showBurnSuccessModal();
+          }
+
+          // Refresh BURN token balance after successful burn
+          if (window.updateSOLBalance) {
+            console.log("🔄 Refreshing BURN token balance after burn");
+            setTimeout(() => {
+              window.updateSOLBalance();
+            }, 1000); // 1 second delay to allow blockchain to update
+          }
+        }
+      }
+    });
+
   } catch (error) {
     console.warn(
       "⚠️ Socket.io setup failed (game will work without it):",
@@ -695,7 +743,7 @@ async function handleGameStateAfterConnect(walletAddress) {
     // ✅ NEW: Don't restore games immediately after period transitions
     if (window.isPeriodTransition) {
       console.log("🔄 Period transition in progress - skipping game restoration to prevent incomplete game reactivation");
-      showToast("🎮 New period started! Click 'Play Game' to deposit and start! 👆", "info", 4000);
+      // Period transition toast removed per user request
       return;
     }
 

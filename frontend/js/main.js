@@ -164,11 +164,13 @@ document.addEventListener("DOMContentLoaded", () => {
         if (data.gameState.gameId && !isPeriodTransition) {
           console.log("🔄 Submitting completion for abandoned incomplete game");
           try {
-            await window.streakManager.submitGameCompletion(
+            window.streakManager.submitGameCompletion(
               data.gameState.gameId,
               walletAddress,
               "abandoned_incomplete"
-            );
+            ).catch(error => {
+              console.error("❌ Error submitting abandoned game completion:", error);
+            });
           } catch (error) {
             console.log("⚠️ Could not submit completion for abandoned game (may already be processed):", error);
           }
@@ -921,14 +923,17 @@ document.addEventListener("DOMContentLoaded", () => {
           console.log("🎯 Win detected - marked for delayed row reduction on next timer reset");
         }
 
-        // ✅ Submit game completion for manual wins (not timer expiration)
+        // ✅ Submit game completion for manual wins (not timer expiration) - NON-BLOCKING
         if (gameId && walletAddress && window.streakManager && !isPeriodTransition) {
           console.log("🔍 STREAK RESET SOURCE 4: Win handler in main.js (manual win)");
-          await window.streakManager.submitGameCompletion(
+          // Make this non-blocking so win animation shows immediately
+          window.streakManager.submitGameCompletion(
             gameId,
             walletAddress,
             "game_won" // Add context for server
-          );
+          ).catch(error => {
+            console.error("❌ Error submitting game completion:", error);
+          });
         }
 
         setTimeout(() => {
@@ -1026,11 +1031,13 @@ document.addEventListener("DOMContentLoaded", () => {
           // ✅ Prevent duplicate toast by marking that we already showed one
           window.lastStreakResetToastTime = Date.now();
 
-          await window.streakManager.submitGameCompletion(
+          window.streakManager.submitGameCompletion(
             gameId,
             walletAddress,
             "row_limit_reached" // Add context for server
-          );
+          ).catch(error => {
+            console.error("❌ Error submitting row limit completion:", error);
+          });
         }
 
         // Show game over toast - we need to get the word from somewhere
@@ -1081,11 +1088,13 @@ document.addEventListener("DOMContentLoaded", () => {
           // ✅ Prevent duplicate toast by marking that we already showed one
           window.lastStreakResetToastTime = Date.now();
 
-          await window.streakManager.submitGameCompletion(
+          window.streakManager.submitGameCompletion(
             gameId,
             walletAddress,
             "incorrect_guess" // Add context for server
-          );
+          ).catch(error => {
+            console.error("❌ Error submitting incorrect guess completion:", error);
+          });
         }
 
         setTimeout(
