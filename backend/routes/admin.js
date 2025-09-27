@@ -418,6 +418,7 @@ router.post("/reset-all-data", authenticateAdmin, (req, res) => {
 
     console.log(`✅ All data reset completed by ${resetBy}`);
 
+
     // ✅ NEW: Broadcast difficulty reset to all players
     if (global.broadcastToAllPlayers) {
       global.broadcastToAllPlayers("difficulty-reset", {

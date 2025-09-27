@@ -1103,4 +1103,52 @@ router.get("/test-grace-period", (req, res) => {
   });
 });
 
+// GET /api/game/auto-finish-status - Check if we're in auto-finish countdown period
+router.get("/auto-finish-status", async (req, res) => {
+  try {
+    const autoFinishState = global.autoFinishState;
+
+    if (!autoFinishState || !autoFinishState.isActive) {
+      return res.json({
+        success: true,
+        isAutoFinishing: false,
+        message: "No active auto-finish period"
+      });
+    }
+
+    // Check if auto-finish period has expired
+    const now = Date.now();
+    if (now > autoFinishState.endTimestamp) {
+      // Clear expired state
+      global.autoFinishState = null;
+      return res.json({
+        success: true,
+        isAutoFinishing: false,
+        message: "Auto-finish period has expired"
+      });
+    }
+
+    // Return active auto-finish state
+    res.json({
+      success: true,
+      isAutoFinishing: true,
+      autoFinishState: {
+        startedAt: autoFinishState.startedAt,
+        endTime: autoFinishState.endTime,
+        endTimestamp: autoFinishState.endTimestamp,
+        leaderboard: autoFinishState.leaderboard,
+        timeRemaining: autoFinishState.endTimestamp - now
+      },
+      message: "Auto-finish period is active"
+    });
+  } catch (error) {
+    console.error("Error getting auto-finish status:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to get auto-finish status",
+      isAutoFinishing: false
+    });
+  }
+});
+
 module.exports = router;

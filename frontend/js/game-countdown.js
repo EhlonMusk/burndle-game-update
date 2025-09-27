@@ -54,6 +54,9 @@ function updateCountdownDisplay() {
     localStorage.removeItem('gameEndTime');
     localStorage.removeItem('gameStartedAt');
     console.log('⏰ Game period ended');
+
+    // Automatically trigger finish game functionality
+    triggerFinishGame();
     return;
   }
 
@@ -186,6 +189,44 @@ function clearGameCountdown() {
   updateCountdownElements("00", "00", "00", "00", "No active game period");
 
   console.log('⏰ Countdown cleared and reset');
+}
+
+/**
+ * Automatically trigger finish game functionality when countdown reaches zero
+ */
+async function triggerFinishGame() {
+  console.log('⏰ Automatically triggering finish game functionality');
+  console.log('⏰ Available functions check:');
+  console.log('  - toggleFinishGame:', typeof toggleFinishGame);
+  console.log('  - showFinishGameModal:', typeof showFinishGameModal);
+  console.log('  - window.showFinishGameModal:', typeof window.showFinishGameModal);
+  console.log('  - socket:', typeof socket);
+
+  try {
+    // Always use socket approach for auto-finish since we're in player context
+    if (typeof socket !== 'undefined' && socket && socket.emit) {
+      console.log('⏰ Socket available, emitting auto-finish-game event');
+      socket.emit('auto-finish-game', {
+        reason: 'countdown-expired',
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      console.log('⏰ Socket not available, trying direct modal call');
+
+      // Fallback: try to call finish game modal directly
+      if (window.showFinishGameModal) {
+        console.log('⏰ Calling window.showFinishGameModal directly');
+        window.showFinishGameModal([]);
+      } else if (typeof showFinishGameModal === 'function') {
+        console.log('⏰ Calling global showFinishGameModal directly');
+        showFinishGameModal([]);
+      } else {
+        console.log('⏰ No finish game methods available');
+      }
+    }
+  } catch (error) {
+    console.error('⏰ Error triggering finish game automatically:', error);
+  }
 }
 
 // Make functions globally available

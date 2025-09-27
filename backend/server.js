@@ -164,9 +164,9 @@ io.on("connection", (socket) => {
     if (connectedAdmins.has(socket.id)) {
       console.log('🚀 Admin triggered start game modal broadcast');
 
-      // Calculate 7 days from now
+      // Calculate 5 minutes from now
       const startTime = new Date();
-      const endTime = new Date(startTime.getTime() + (7 * 24 * 60 * 60 * 1000)); // 7 days in milliseconds
+      const endTime = new Date(startTime.getTime() + (5 * 60 * 1000)); // 5 minutes in milliseconds
 
       // Broadcast to all connected clients (players) - same pattern as game_paused
       const broadcastData = {
@@ -184,6 +184,147 @@ io.on("connection", (socket) => {
       console.log(`⏰ Game period: ${startTime.toISOString()} → ${endTime.toISOString()}`);
     } else {
       console.warn('⚠️ Non-admin tried to trigger start game modal');
+    }
+  });
+
+  // Handle automatic finish game when countdown expires
+  socket.on("auto-finish-game", async (data) => {
+    console.log('⏰ Received auto-finish-game event from socket:', socket.id);
+    console.log('⏰ Event data:', data);
+    console.log('⏰ Connected clients count:', io.engine.clientsCount);
+
+    try {
+      // Get real leaderboard data (same logic as manual finish game)
+      console.log("⏰ About to call storage.getAllStreaks() for auto-finish");
+      const allStreaks = storage.getAllStreaks();
+      console.log("⏰ Got streaks:", allStreaks ? allStreaks.length : "null", "items");
+
+      const leaderboard = allStreaks
+        .sort((a, b) => (b.maxStreak || 0) - (a.maxStreak || 0))
+        .slice(0, 3)
+        .map((player, index) => ({
+          rank: index + 1,
+          wallet: player.wallet || player.fullWallet?.slice(0, 8) + "...",
+          fullWallet: player.fullWallet || player.wallet,
+          maxStreak: player.maxStreak || 0,
+          gamesWon: player.gamesWon || 0,
+          gamesPlayed: player.gamesPlayed || 0
+        }));
+
+      console.log("⏰ Generated leaderboard for auto-finish:", leaderboard);
+
+      // Set temporary auto-finish state (20 seconds from now)
+      const autoFinishEndTime = new Date(Date.now() + 20 * 1000);
+      global.autoFinishState = {
+        isActive: true,
+        startedAt: new Date().toISOString(),
+        endTime: autoFinishEndTime.toISOString(),
+        endTimestamp: autoFinishEndTime.getTime(),
+        leaderboard: leaderboard
+      };
+
+      console.log("⏰ Set auto-finish state until:", autoFinishEndTime.toISOString());
+
+      const broadcastData = {
+        reason: data.reason || 'countdown-expired',
+        timestamp: data.timestamp || new Date().toISOString(),
+        message: 'Game period has ended! Time to see the results!',
+        leaderboard: leaderboard,
+        autoFinishEndTime: autoFinishEndTime.toISOString(),
+        autoFinishEndTimestamp: autoFinishEndTime.getTime()
+      };
+
+      // Broadcast to all clients to show the finish game modal
+      io.emit("game_auto_finished", broadcastData);
+
+      console.log('⏰ Broadcasted game_auto_finished to all clients');
+      console.log('⏰ Broadcast data:', broadcastData);
+    } catch (error) {
+      console.error('⏰ Error in auto-finish-game:', error);
+    }
+  });
+
+  // Handle automatic start game after finish countdown expires (no admin auth required)
+  socket.on("auto-start-game", (data) => {
+    console.log('🔄 Received auto-start-game event from socket:', socket.id);
+    console.log('🔄 Event data:', data);
+    console.log('🔄 Reason:', data.reason);
+
+    if (data.reason === 'finish-countdown-expired') {
+      console.log('🚀 Auto-starting new game after finish countdown expired');
+
+      // Clear auto-finish state since we're starting a new game
+      if (global.autoFinishState) {
+        console.log('🔄 Clearing auto-finish state');
+        global.autoFinishState = null;
+      }
+
+      // ✅ RESET ALL PLAYER DATA: Same logic as "reset everything" button
+      console.log('🗑️ AUTO-RESTART: Resetting all player data for new game period');
+
+      // Debug: Log what will be cleared
+      const allStreaks = storage.getAllStreaks();
+      const streaksWithMax = allStreaks.filter(p => (p.maxStreak || 0) > 0);
+      console.log(`🔍 AUTO-RESTART - Will clear data for ${allStreaks.length} players, ${streaksWithMax.length} have max streaks > 0`);
+      if (streaksWithMax.length > 0) {
+        console.log(`🔍 AUTO-RESTART - Players with max streaks:`,
+          streaksWithMax.map(p => `${(p.fullWallet || p.wallet).slice(0, 8)}: Max=${p.maxStreak}`).join(', ')
+        );
+      }
+
+      // Complete wipe of all player data
+      console.log(`🗑️ AUTO-RESTART - Removing ${storage.walletStreaks.size} players completely`);
+      const removedPlayers = Array.from(storage.walletStreaks.keys()).map(w => w.slice(0, 8) + '...');
+      if (removedPlayers.length > 0) {
+        console.log(`🗑️ PLAYERS REMOVED:`, removedPlayers.join(', '));
+      }
+
+      storage.activeGames.clear();
+      storage.walletStreaks.clear(); // Complete removal of all player data
+      storage.dailyGames.clear();
+      storage.assignedWords = {};
+
+      // Auto-assign random words to all players after reset
+      console.log("🎲 AUTO-RESTART - Auto-assigning random words after data reset");
+      storage.autoAssignRandomWordsToAllPlayers(true); // Force assignment after reset
+
+      // Save the cleared data to persistent files
+      storage.saveStreaksToFile();
+      storage.saveDailyGamesToFile();
+      storage.saveAssignedWords(storage.assignedWords);
+
+      console.log(`💾 AUTO-RESTART - Persisted all cleared data to files`);
+      console.log(`✅ Auto-restart data reset completed`);
+
+      // Broadcast data reset to all players
+      io.emit("game_reset", {
+        resetBy: 'auto-system',
+        resetAt: new Date().toISOString(),
+        message: "New game period has begun - all player data reset",
+        reason: 'auto-restart'
+      });
+      console.log('📡 Broadcasted game_reset event to all clients');
+
+      // Calculate 5 minutes from now
+      const startTime = new Date();
+      const endTime = new Date(startTime.getTime() + (5 * 60 * 1000)); // 5 minutes in milliseconds
+
+      // Broadcast to all connected clients (players) - same pattern as admin start
+      const broadcastData = {
+        isStarted: true,
+        startedBy: 'auto-system',
+        startedAt: startTime.toISOString(),
+        gameEndTime: endTime.toISOString(),
+        gameEndTimestamp: endTime.getTime(),
+        message: 'New Game Started Automatically! 🎮'
+      };
+
+      io.emit("game_started", broadcastData);
+      console.log('📡 Auto-broadcasted game_started to all clients');
+      console.log('📡 Broadcast data:', broadcastData);
+      console.log(`⏰ Auto game period: ${startTime.toISOString()} → ${endTime.toISOString()}`);
+    } else {
+      console.warn('⚠️ Auto-start-game called with invalid reason:', data.reason);
     }
   });
 });

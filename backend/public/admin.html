@@ -2354,6 +2354,65 @@
             loadStats();
           }, 1000);
         });
+
+        // Handle game_started events to restart the countdown when auto-start occurs
+        socket.on("game_started", (data) => {
+          console.log("🚀 Admin - Received game_started event:", data);
+
+          // Reset auto-finish state since new game has started
+          isAutoFinishing = false;
+          updateFinishGameButton();
+
+          // Store game end time in localStorage for persistence
+          if (data.gameEndTimestamp) {
+            localStorage.setItem('gameEndTime', data.gameEndTimestamp.toString());
+            localStorage.setItem('gameStartedAt', data.startedAt);
+            console.log(`⏰ Admin - Game period stored: ${data.startedAt} → ${data.gameEndTime}`);
+          }
+
+          // Start the admin game period countdown
+          if (data.gameEndTimestamp) {
+            console.log("🚀 Admin - Starting game period countdown for new auto-started game");
+            startAdminGamePeriodCountdown(data.gameEndTimestamp);
+          }
+
+          // Show notification about the new game period
+          showLiveUpdateNotification(
+            `🚀 New game period started automatically!`,
+            "success"
+          );
+        });
+
+        // Handle game_auto_finished events to immediately update button state
+        socket.on("game_auto_finished", (data) => {
+          console.log("⏰ Admin - Received game_auto_finished event:", data);
+
+          // Set auto-finish state and update button immediately
+          isAutoFinishing = true;
+          updateFinishGameButton();
+
+          // Show notification about auto-finish
+          showLiveUpdateNotification(
+            `⏰ Game automatically finished! Results countdown started.`,
+            "warning"
+          );
+        });
+
+        // Handle game_reset events to reset button when manual finish countdown expires
+        socket.on("game_reset", (data) => {
+          console.log("🔄 Admin - Received game_reset event:", data);
+
+          // Reset auto-finish state since game has been reset
+          isAutoFinishing = false;
+          isGameFinished = false;
+          updateFinishGameButton();
+
+          // Show notification about the reset
+          showLiveUpdateNotification(
+            `🔄 Game reset and new period started!`,
+            "success"
+          );
+        });
       }
 
       // Update WebSocket status indicator
@@ -2487,6 +2546,9 @@
           loadPlayers(),
           checkGamePauseState(), // ✅ Make sure to check pause state on dashboard load
         ]);
+
+        // Start auto-finish status checking
+        startAutoFinishChecking();
       }
 
       async function loadStats() {
@@ -2665,6 +2727,13 @@
 
       function startAdminGamePeriodCountdown(endTimestamp) {
         console.log("🎮 Starting admin game period countdown with endTimestamp:", endTimestamp);
+
+        // Clear any existing interval to prevent multiple countdowns
+        if (adminGamePeriodCountdownInterval) {
+          console.log("🎮 Clearing existing admin game period countdown interval");
+          clearInterval(adminGamePeriodCountdownInterval);
+          adminGamePeriodCountdownInterval = null;
+        }
 
         // Update immediately
         updateAdminGamePeriodCountdown(endTimestamp);
@@ -4113,10 +4182,12 @@
       // ============================== FINISH GAME TOGGLE FUNCTIONALITY ==============================
 
       let isGameFinished = false;
+      let isAutoFinishing = false;
+      let autoFinishCheckInterval = null;
 
       async function toggleFinishGame() {
-        if (isGameFinished) {
-          // Cancel the finished game
+        if (isGameFinished || isAutoFinishing) {
+          // Cancel the finished game (manual or auto)
           await cancelFinishGame();
         } else {
           // Start/finish the game
@@ -4155,8 +4226,8 @@
 
           if (data.success) {
             isGameFinished = false;
-            btn.textContent = "🏁 Finish Game";
-            btn.className = "control-btn danger";
+            isAutoFinishing = false; // Reset auto-finishing state
+            updateFinishGameButton(); // Use the unified button update function
             updateFinishStatus("active");
           } else {
             showControlMessage(`❌ Failed to cancel: ${data.error}`, "error");
@@ -4166,6 +4237,65 @@
           showControlMessage("❌ Error cancelling game", "error");
         } finally {
           btn.disabled = false;
+        }
+      }
+
+      // ============================== AUTO-FINISH STATUS CHECKING ==============================
+
+      async function checkAutoFinishStatus() {
+        try {
+          const response = await fetch('/api/game/auto-finish-status');
+          const data = await response.json();
+
+          if (data.success) {
+            const wasAutoFinishing = isAutoFinishing;
+            isAutoFinishing = data.isAutoFinishing;
+
+            // Update button if status changed
+            if (wasAutoFinishing !== isAutoFinishing) {
+              updateFinishGameButton();
+            }
+
+            return data.isAutoFinishing;
+          }
+        } catch (error) {
+          console.error('Error checking auto-finish status:', error);
+        }
+        return false;
+      }
+
+      function updateFinishGameButton() {
+        const btn = document.getElementById('finish-game-btn');
+        if (!btn) return;
+
+        if (isAutoFinishing || isGameFinished) {
+          btn.textContent = "🚫 Cancel";
+          btn.className = "control-btn secondary";
+        } else {
+          btn.textContent = "🏁 Finish Game";
+          btn.className = "control-btn danger";
+        }
+      }
+
+      function startAutoFinishChecking() {
+        // Clear any existing interval
+        if (autoFinishCheckInterval) {
+          clearInterval(autoFinishCheckInterval);
+        }
+
+        // Check immediately
+        checkAutoFinishStatus();
+
+        // Then check every 2 seconds
+        autoFinishCheckInterval = setInterval(checkAutoFinishStatus, 2000);
+        console.log('🔄 Started auto-finish status checking');
+      }
+
+      function stopAutoFinishChecking() {
+        if (autoFinishCheckInterval) {
+          clearInterval(autoFinishCheckInterval);
+          autoFinishCheckInterval = null;
+          console.log('🛑 Stopped auto-finish status checking');
         }
       }
 
@@ -4181,13 +4311,19 @@
         // Clear existing classes
         indicator.className = 'status-indicator';
 
+        // Update global state and button
         if (status === 'finished') {
           indicator.classList.add('paused');
           text.textContent = 'Game Finished';
+          isGameFinished = true;
         } else if (status === 'active') {
           indicator.classList.add('active');
           text.textContent = 'Game Active';
+          isGameFinished = false;
         }
+
+        // Update the finish game button
+        updateFinishGameButton();
       }
 
       // Collapsible Section Functionality

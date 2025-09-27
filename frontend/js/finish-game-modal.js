@@ -2,7 +2,7 @@
 // frontend/js/finish-game-modal.js - Handle finish game modal display for players
 
 // Show finish game modal when triggered by admin
-function showFinishGameModal(leaderboard) {
+function showFinishGameModal(leaderboard, endTimestamp = null) {
   console.log("🏁 Showing finish game modal to player");
 
   // Remove any existing modal
@@ -24,7 +24,7 @@ function showFinishGameModal(leaderboard) {
       </div>
       <div class="modal-content">
         <div class="top-three-section">
-          ${leaderboard.slice(0, 3).map(player => {
+          ${leaderboard && leaderboard.length > 0 ? leaderboard.slice(0, 3).map(player => {
             const rankEmoji = player.rank === 1 ? '🥇' : player.rank === 2 ? '🥈' : '🥉';
             const displayWallet = player.wallet;
             const fullWallet = player.fullWallet || player.wallet;
@@ -58,7 +58,15 @@ function showFinishGameModal(leaderboard) {
                 </div>
               </div>
             `;
-          }).join('')}
+          }).join('') : `
+            <div class="empty-leaderboard">
+              <div class="empty-message">
+                <span class="empty-icon">🎮</span>
+                <h3>No Leaderboard Data Yet</h3>
+                <p>Play more games to see the top players appear here!</p>
+              </div>
+            </div>
+          `}
         </div>
         <div class="next-game-section">
           <p class="next-game-text">The next game will start in:</p>
@@ -71,7 +79,7 @@ function showFinishGameModal(leaderboard) {
   document.body.appendChild(overlay);
 
   // Set up the countdown timer
-  setupFinishGameCountdownTimer();
+  setupFinishGameCountdownTimer(endTimestamp);
 
   // Add modal styles if not already present
   if (!document.getElementById('finish-modal-styles')) {
@@ -136,7 +144,7 @@ function pauseGameForFinish() {
   }
 
   // Show game finished overlay on the game board
-  showGameFinishedOverlay();
+  // showGameFinishedOverlay(); // Removed per user request
 }
 
 // Resume game functionality when modal is closed
@@ -209,12 +217,13 @@ function hideGameFinishedOverlay() {
 }
 
 // Setup countdown timer
-function setupFinishGameCountdownTimer() {
+function setupFinishGameCountdownTimer(endTimestamp = null) {
   const countdownEl = document.getElementById('gameFinishCountdownDisplay');
   if (!countdownEl) return;
 
-  // Set countdown to 1 hour from now
-  const countdownEnd = new Date(Date.now() + 60 * 60 * 1000);
+  // Use provided endTimestamp or create new one (20 seconds from now)
+  const countdownEnd = endTimestamp ? new Date(endTimestamp) : new Date(Date.now() + 20 * 1000);
+  console.log("🏁⏰ Setting up countdown with end time:", countdownEnd);
 
   function updateCountdown() {
     const now = new Date();
@@ -226,6 +235,12 @@ function setupFinishGameCountdownTimer() {
         clearInterval(window.finishGameCountdownTimer);
         window.finishGameCountdownTimer = null;
       }
+
+      console.log('🏁 Finish game countdown expired, triggering automatic start game');
+
+      // Automatically trigger start game after countdown expires
+      triggerAutoStartGame();
+
       return;
     }
 
@@ -628,11 +643,111 @@ function addFinishModalStyles() {
       pointer-events: none !important;
       cursor: not-allowed !important;
     }
+
+    /* Empty leaderboard styles */
+    .empty-leaderboard {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 20px;
+      min-height: 120px;
+    }
+
+    .empty-message {
+      text-align: center;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .empty-icon {
+      display: block;
+      font-size: 3rem;
+      margin-bottom: 15px;
+      opacity: 0.7;
+    }
+
+    .empty-message h3 {
+      margin: 0 0 10px 0;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .empty-message p {
+      margin: 0;
+      font-size: 0.9rem;
+      opacity: 0.7;
+      line-height: 1.4;
+    }
   `;
   document.head.appendChild(styles);
+}
+
+// Automatically trigger start game when finish countdown expires
+function triggerAutoStartGame() {
+  console.log('🚀 Automatically triggering start game functionality');
+  console.log('🚀 Available socket types:', {
+    'typeof socket': typeof socket,
+    'typeof window.socket': typeof window.socket,
+    'window.pauseHandler?.socket': typeof window.pauseHandler?.socket
+  });
+
+  try {
+    // First close the finish game modal
+    if (typeof closeFinishModal === 'function') {
+      console.log('🚀 Closing finish game modal');
+      closeFinishModal();
+    }
+
+    // Try different socket references
+    let socketToUse = null;
+    if (window.playerSocket && window.playerSocket.emit) {
+      socketToUse = window.playerSocket;
+      console.log('🚀 Using window.playerSocket');
+    } else if (typeof socket !== 'undefined' && socket && socket.emit) {
+      socketToUse = socket;
+      console.log('🚀 Using global socket');
+    } else if (typeof window.socket !== 'undefined' && window.socket && window.socket.emit) {
+      socketToUse = window.socket;
+      console.log('🚀 Using window.socket');
+    } else if (window.pauseHandler && window.pauseHandler.socket && window.pauseHandler.socket.emit) {
+      socketToUse = window.pauseHandler.socket;
+      console.log('🚀 Using pauseHandler socket');
+    }
+
+    if (socketToUse) {
+      console.log('🚀 Socket found, emitting auto-start-game event');
+      console.log('🚀 Socket connected:', socketToUse.connected);
+
+      socketToUse.emit('auto-start-game', {
+        triggeredBy: 'auto-restart',
+        reason: 'finish-countdown-expired',
+        timestamp: new Date().toISOString()
+      });
+
+      console.log('🚀 auto-start-game event emitted successfully');
+    } else {
+      console.log('🚀 No socket available for auto start game');
+
+      // Fallback: reload the page to restart the game
+      console.log('🚀 Fallback: reloading page to restart game in 2 seconds');
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    }
+
+  } catch (error) {
+    console.error('🚀 Error triggering auto start game:', error);
+
+    // Ultimate fallback
+    console.log('🚀 Error occurred, falling back to page reload');
+    setTimeout(() => {
+      window.location.reload();
+    }, 2000);
+  }
 }
 
 // Make functions globally available
 window.showFinishGameModal = showFinishGameModal;
 window.closeFinishModal = closeFinishModal;
 window.copyWalletAddressFinish = copyWalletAddressFinish;
+window.triggerAutoStartGame = triggerAutoStartGame;

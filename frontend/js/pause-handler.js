@@ -603,6 +603,28 @@ class GamePauseHandler {
       this.handleGameCancelled(data);
     });
 
+    // Listen for admin cancel button (with hyphen)
+    this.socket.on("game-cancelled", (data) => {
+      console.log("🚫 Received game-cancelled event via Socket.io (admin cancel)");
+      this.handleGameCancelled(data);
+    });
+
+    this.socket.on("game_auto_finished", (data) => {
+      console.log("⏰ Received game_auto_finished event via Socket.io");
+      console.log("⏰ Socket event data:", data);
+      console.log("⏰ Socket connected:", this.socket.connected);
+      this.handleGameAutoFinished(data);
+    });
+
+    // Handle manual finish game events (when admin clicks "Finish Game")
+    this.socket.on("game-stopped", (data) => {
+      console.log("🛑 Received game-stopped event via Socket.io");
+      console.log("🛑 Socket event data:", data);
+      console.log("🛑 Socket connected:", this.socket.connected);
+      // Use the same handler as auto-finish since they should behave identically
+      this.handleGameAutoFinished(data);
+    });
+
     // Check connection status
     if (this.socket.connected) {
       this.updateConnectionStatus("🔗 Socket.io connected");
@@ -681,6 +703,7 @@ class GamePauseHandler {
       console.error("❌ Failed to check finish status:", error);
     }
   }
+
 
   // ✅ Handle game paused event
   handleGamePaused(data) {
@@ -792,8 +815,65 @@ class GamePauseHandler {
     this.hideFinishOverlay();
     this.clearFinishState();
 
+    // Close finish game modal if it's open
+    if (typeof window.closeFinishModal === 'function') {
+      console.log("🚫 Closing finish game modal");
+      window.closeFinishModal();
+    }
+
     // Dispatch custom event
     window.dispatchEvent(new CustomEvent("gameCancelled", { detail: data }));
+  }
+
+  handleGameAutoFinished(data) {
+    console.log("⏰ Game automatically finished:", data);
+    console.log("⏰ Checking modal availability:");
+    console.log("  - window.showFinishGameModal:", typeof window.showFinishGameModal);
+    console.log("  - showFinishGameModal:", typeof showFinishGameModal);
+
+    // Store auto-finish state in localStorage for persistence across page refreshes
+    const autoFinishState = {
+      isAutoFinishing: true,
+      startedAt: new Date().toISOString(),
+      endTime: new Date(Date.now() + 20 * 1000).toISOString(), // 20 seconds countdown
+      endTimestamp: Date.now() + 20 * 1000,
+      leaderboard: data.leaderboard || [],
+      timestamp: Date.now()
+    };
+
+    localStorage.setItem('autoFinishState', JSON.stringify(autoFinishState));
+    console.log("⏰ Stored auto-finish state in localStorage:", autoFinishState);
+
+    // Wait for showFinishGameModal to be available and call it with proper leaderboard
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    const waitForModal = () => {
+      attempts++;
+      console.log(`⏰ Modal check attempt ${attempts}/${maxAttempts}`);
+
+      if (window.showFinishGameModal) {
+        console.log("⏰ Found window.showFinishGameModal, calling it now");
+        // Create a basic leaderboard structure for auto-finish
+        const leaderboard = data.leaderboard || [];
+        console.log("⏰ Using leaderboard:", leaderboard);
+        try {
+          window.showFinishGameModal(leaderboard);
+          console.log("⏰ Successfully called window.showFinishGameModal");
+        } catch (error) {
+          console.error("⏰ Error calling window.showFinishGameModal:", error);
+        }
+      } else if (attempts < maxAttempts) {
+        console.log("⏰ window.showFinishGameModal not available yet, waiting...");
+        setTimeout(waitForModal, 500);
+      } else {
+        console.log("⏰ Max attempts reached, showFinishGameModal not available");
+        console.log("⏰ Falling back to manual modal creation");
+        // Add fallback modal creation here if needed
+      }
+    };
+
+    waitForModal();
   }
 
   // ✅ Show pause overlay
@@ -909,14 +989,14 @@ class GamePauseHandler {
     this.startFinishCountdownTimer();
   }
 
-  // ✅ Start finish countdown timer (1 hour from finish button press)
+  // ✅ Start finish countdown timer (20 seconds from finish button press)
   startFinishCountdownTimer() {
     const countdownEl = document.getElementById('finish-countdown-display');
     if (!countdownEl) return;
 
     // Use the stored finish start time, or current time as fallback
     const startTime = this.finishStartTime || Date.now();
-    const countdownEnd = startTime + (60 * 60 * 1000); // 1 hour from finish start time
+    const countdownEnd = startTime + (20 * 1000); // 20 seconds from finish start time
 
     const updateCountdown = () => {
       const now = Date.now();
@@ -1337,6 +1417,46 @@ class GamePauseHandler {
     }
   }
 
+  // ✅ Restore auto-finish state from localStorage
+  restoreAutoFinishState() {
+    try {
+      const storedState = localStorage.getItem("autoFinishState");
+      if (!storedState) return;
+
+      const state = JSON.parse(storedState);
+      console.log("🔄⏰ Checking auto-finish state:", state);
+
+      const now = Date.now();
+      const endTimestamp = state.endTimestamp;
+
+      // Check if auto-finish is still active
+      if (state.isAutoFinishing && endTimestamp && endTimestamp > now) {
+        const timeRemaining = endTimestamp - now;
+        console.log("🔄⏰ Restoring auto-finish state with", timeRemaining, "ms remaining");
+
+        // Show the finish game modal with the stored leaderboard and endTimestamp
+        if (window.showFinishGameModal) {
+          console.log("🔄⏰ Calling showFinishGameModal with leaderboard and endTimestamp:", state.leaderboard, endTimestamp);
+          window.showFinishGameModal(state.leaderboard || [], endTimestamp);
+        } else {
+          console.log("🔄⏰ showFinishGameModal not available, will retry later");
+          // Even if modal isn't available yet, pause the game for auto-finish
+          if (typeof pauseGameForFinish === 'function') {
+            console.log("🔄⏰ Pausing game during auto-finish restore");
+            pauseGameForFinish();
+          }
+        }
+      } else if (endTimestamp && endTimestamp <= now) {
+        // Auto-finish timer expired while offline
+        console.log("🔄⏰ Auto-finish timer expired while offline, cleaning up");
+        localStorage.removeItem('autoFinishState');
+      }
+    } catch (error) {
+      console.error("❌ Failed to restore auto-finish state:", error);
+      localStorage.removeItem('autoFinishState');
+    }
+  }
+
   // ✅ Public API methods
   isGamePaused() {
     return this.isPaused;
@@ -1404,6 +1524,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Restore state if page was refreshed
       window.gamePauseHandler.restorePauseState();
       window.gamePauseHandler.restoreFinishState();
+      window.gamePauseHandler.restoreAutoFinishState();
 
       console.log("🎮✅ Game Pause Handler auto-initialized");
     }

@@ -1,47 +1,9 @@
 {
-  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29315332": {
-    "transactionSignature": "2M1BAfTV4LdEF1YKewQSLU94LkHbNBG1GpAtinqHj3q6eBKhG3XqoG1wCVGyLfbKxYLZHQ4iNou1f6ecj691VXYg",
+  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29316059": {
+    "transactionSignature": "4bBVuVb7CRhsW7AKQpm9oFA2cXjNPQeLgtftscCdP7TbdrPzkp7f9Urh5czQAYSiURBMSR7cyXha8RmuPJmQBM7T",
     "amount": 100000,
-    "timestamp": "2025-09-26T20:51:20.864Z",
+    "timestamp": "2025-09-27T08:59:35.028Z",
     "gracePeriod": false,
-    "period": "period-29315332",
-    "originalPeriod": "period-29315331",
-    "convertedByGracePeriod": true,
-    "conversionTimestamp": "2025-09-26T20:52:05.661Z"
-  },
-  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29315333": {
-    "transactionSignature": "T4MtihgF9nbn8vw5AbtXSXanT86fAqHKoGmQWMQtKD1acViAmP5MWbeq9zYxsYPG3C9pr42Z59kc5Lwj4zTSyQ5",
-    "amount": 100000,
-    "timestamp": "2025-09-26T20:53:19.719Z",
-    "gracePeriod": false,
-    "period": "period-29315333"
-  },
-  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29315334": {
-    "transactionSignature": "25XeVsD95ejjoTkTWPYcK7X5WWABK3PohSDxvPgftk7LLAfw2ggLcQ9D3TEdVs3qo4AdeztH3botLFfghS5etEhT",
-    "amount": 100000,
-    "timestamp": "2025-09-26T20:54:21.471Z",
-    "gracePeriod": false,
-    "period": "period-29315334"
-  },
-  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29315338": {
-    "transactionSignature": "mjCoJy6mtempB1QkoxD9pwTzaZF1zmDd66HVZNxouP7UyLmywDQv4bPttPuX7Rj6pSzx281guS9GGfqmvEuHjXx",
-    "amount": 100000,
-    "timestamp": "2025-09-26T20:58:15.162Z",
-    "gracePeriod": false,
-    "period": "period-29315338"
-  },
-  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29315342": {
-    "transactionSignature": "5VhF7u3cUL94apoGJVKZKH8fz7GdQrb51r9jhRV2otKkeLuDreovoS72cWKsQAFxLqR6M2D4QU2rmc5hnSBPZJ23",
-    "amount": 100000,
-    "timestamp": "2025-09-26T21:02:35.330Z",
-    "gracePeriod": false,
-    "period": "period-29315342"
-  },
-  "4QyVojMwySu6wwpJATBTBqiTJSqMgov98HGmUaqGAnoR-period-29315344": {
-    "transactionSignature": "QJNpXtbjM2LEB827qm9UJvaseSfeRWCj2KiqbF9YWG2hXWdZ14bMMGa7ULxr6LFsFYbXfKTzU8CjWm7zV9DHCMn",
-    "amount": 100000,
-    "timestamp": "2025-09-26T21:04:10.489Z",
-    "gracePeriod": false,
-    "period": "period-29315344"
+    "period": "period-29316059"
   }
 }
