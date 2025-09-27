@@ -221,8 +221,8 @@ function setupFinishGameCountdownTimer(endTimestamp = null) {
   const countdownEl = document.getElementById('gameFinishCountdownDisplay');
   if (!countdownEl) return;
 
-  // Use provided endTimestamp or create new one (20 seconds from now)
-  const countdownEnd = endTimestamp ? new Date(endTimestamp) : new Date(Date.now() + 20 * 1000);
+  // Use provided endTimestamp or create new one (1 hour from now)
+  const countdownEnd = endTimestamp ? new Date(endTimestamp) : new Date(Date.now() + 3600 * 1000);
   console.log("🏁⏰ Setting up countdown with end time:", countdownEnd);
 
   function updateCountdown() {
